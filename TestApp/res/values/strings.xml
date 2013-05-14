@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">TestApp</string>
+    <string name="action_settings">Settings</string>
+    <string name="sBconnect">Login</string>
+    <string name="sUsername">Username</string>
+    <string name="sPassword">Password</string>
+    <string name="sSettingsTitle">Settings</string>
+    <string name="sServerHost">Server Host</string>
+    <string name="sServerHostSummary">Server host address</string>
+    <string name="sServerPort">Port</string>
+    <string name="sServerPortSummary">By default: 8069</string>
+    <string name="sServerDBName">Database</string>
+    <string name="sServerDBNameSummary">Database name</string>
+    <string name="sTreeTitle">TreeView</string>
+    <string name="sConnecting">Connecting</string>
+    <string name="sFailTitle">Failed to connect</string>
+    <string name="sCheckSettings">Failed to connect, please check your settings.</string>
+    <string name="sYes">Yes</string>
+    <string name="sNo">No</string>
+    <string name="sCloseQ">Are you shure you want to exit?</string>
+    <string name="sCreate">Create</string>
+    <string name="sLogout">Logout?</string>
+    <string name="sExit">Exit</string>
+    <string name="sSave">Save</string>
+    <string name="sDiscard">Do you want to discard changes?</string>
+    <string name="sView">View</string>
+    <string name="sEdit">Edit</string>
+	
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <EditTextPreference
+        android:key="serverHost"
+        android:defaultValue="localhost"
+        android:summary="@string/sServerHostSummary"
+        android:title="@string/sServerHost" />
+    <EditTextPreference
+        android:key="serverPort"
+        android:defaultValue="8069"
+        android:summary="@string/sServerPortSummary"
+        android:title="@string/sServerPort" />
+    <EditTextPreference
+        android:key="serverDBName"
+        android:summary="@string/sServerDBNameSummary"
+        android:title="@string/sServerDBName" />
+
+</PreferenceScreen>

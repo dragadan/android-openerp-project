@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  android:fillViewport="true">
+  <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" android:background="#ffffff">
+
+        <LinearLayout
+          android:orientation="vertical"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:padding="10dip"
+          >
+          <!--  Login Label -->
+
+          <TextView
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:text="@string/sUsername"
+              android:textColor="#372c24" />
+
+          <EditText
+              android:id="@+id/edtUser"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:layout_marginBottom="20dip"
+              android:layout_marginTop="5dip"
+              android:hint="@string/sUsername"
+              android:singleLine="true" />
+
+          <!--  Password Label -->
+
+          <TextView
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:text="@string/sPassword"
+              android:textColor="#372c24" />
+
+          <EditText
+              android:id="@+id/edtPassword"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:layout_marginTop="5dip"
+              android:hint="@string/sPassword"
+              android:inputType="textPassword"
+              android:singleLine="true" />
+
+          <!-- Login button -->
+
+          <Button
+              android:id="@+id/btnConnect_id"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:layout_marginTop="10dip"
+              android:text="@string/sBconnect" 
+              android:onClick="doLogin" />
+
+          <!-- Link to Registration Screen -->
+ 
+        </LinearLayout>
+        <!-- Login Form Ends -->
+
+  </RelativeLayout>
+</ScrollView>
