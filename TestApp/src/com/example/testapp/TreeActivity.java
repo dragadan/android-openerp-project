@@ -57,7 +57,7 @@ public class TreeActivity extends FragmentActivity implements ReadActivityInterf
 	private void startRead() {
 		// TODO check if params are set and raise exception if not
 		// TODO parametrice infields or use view_fields_get from OpenERPConnect to choos fields
-		String [] theFields = {"name","login","email","company_id","login_date"};
+		String [] theFields = {"name","login","email","organization_id","login_date"};
 		this.inFields = theFields;
 		this.modelName = "res.users";
 		
@@ -161,8 +161,6 @@ public class TreeActivity extends FragmentActivity implements ReadActivityInterf
 			for (int col = 0; col < fields.length; col++) {
 				tvField[col] = new TextView(this);
 				String colText = getStringFromField(obj.get(fields[col]));
-				// Log.d(fields[col],
-				// obj.get(fields[col]).getClass().getName());
 				tvField[col].setText(colText);
 				tvField[col].setPadding(0, 0, SPACING_HORIZONTAL,
 						SPACING_VERTICAL);
@@ -196,7 +194,7 @@ public class TreeActivity extends FragmentActivity implements ReadActivityInterf
 		Intent i = new Intent(this, FormActivity.class);
 		i.putExtra("fields", this.inFields);
 		if(recordDataToEdit != null){
-			i.putExtra("recordDataToEdit", recordDataToEdit);
+			i.putExtra("edtRecord", recordDataToEdit);
 		}
 		startActivity(i);
 		this.finish();

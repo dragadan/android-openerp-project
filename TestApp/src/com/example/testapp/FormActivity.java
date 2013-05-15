@@ -24,9 +24,10 @@ import android.widget.TextView;
 
 import com.openerp.CreateAsyncTask;
 import com.openerp.FieldsGetAndM2PopulateAT;
+import com.openerp.WriteAsyncTask;
 
 public class FormActivity extends FragmentActivity implements
-		ReadActivityInterface, FieldsGetActivityInterface, OnClickListener {
+		 FieldsGetActivityInterface, OnClickListener {
 	private final static int SPACING_VERTICAL = 35;
 	private final static int SPACING_HORIZONTAL = 10;
 	private ArrayList<View> formViews;
@@ -36,10 +37,12 @@ public class FormActivity extends FragmentActivity implements
 	private LinearLayout llTop;
 	private Button btSave;
 	private HashMap<String, Object> values;
-	private CreateAsyncTask crAsTa;
-	private String[] fields;
 	private HashMap<String, Object> edtRecord;
+	private CreateAsyncTask crAsTa;
+	private String[] fields;	
 	private FieldsGetAndM2PopulateAT fgAsTa;
+	private boolean editMode;
+	private WriteAsyncTask wrAsTa;
 
 	public enum OoType {
 		BOOLEAN, INTEGER, FLOAT, CHAR, TEXT, DATE, DATETIME, BINARY, SELECTION, ONE2ONE, MANY2ONE, ONE2MANY, MANY2MANY, RELATED,
@@ -65,6 +68,10 @@ public class FormActivity extends FragmentActivity implements
 			if (extras.containsKey("edtRecord")) {
 				this.edtRecord = (HashMap<String, Object>) extras
 						.get("edtRecord");
+				this.editMode = true;
+			}
+			else{
+				this.editMode = false;
 			}
 		}
 		this.values = new HashMap<String, Object>();
@@ -142,7 +149,6 @@ public class FormActivity extends FragmentActivity implements
 		// formViews array holds the views to retrieve data on Save
 		formViews = new ArrayList<View>();
 		for (String fieldname : this.fields) {
-			Log.d(fieldname, fgAsTa.getFieldType(fieldname));
 			TextView tvLabel = new TextView(this);
 			tvLabel.setText(fieldname);
 			llRec.addView(tvLabel);
@@ -154,6 +160,11 @@ public class FormActivity extends FragmentActivity implements
 				etName.setTag(fieldname);
 				formViews.add(etName);
 				llRec.addView(etName);
+				if(this.editMode){
+					if(!(this.edtRecord.get(fieldname) instanceof Boolean)){
+						etName.setText((String) this.edtRecord.get(fieldname));
+					}
+				}
 				break;
 			case MANY2ONE:
 			case MANY2MANY:
@@ -162,6 +173,7 @@ public class FormActivity extends FragmentActivity implements
 					manylist.add(new IdString((Integer) record.get("id"),
 							(String) record.get("name")));
 				}
+				manylist.add(new IdString(0, ""));
 				Spinner spinner = new Spinner(this);
 				spinner.setTag(fieldname);
 				ArrayAdapter<IdString> spinnerArrayAdapter = new ArrayAdapter<IdString>(
@@ -170,6 +182,15 @@ public class FormActivity extends FragmentActivity implements
 				spinner.setAdapter(spinnerArrayAdapter);
 				formViews.add(spinner);
 				llRec.addView(spinner);
+				if(this.editMode){
+					if(!(this.edtRecord.get(fieldname) instanceof Boolean)){
+						int edId = (Integer) ((Object[]) this.edtRecord.get(fieldname))[0];
+						String edStr = (String) ((Object[]) this.edtRecord.get(fieldname))[1];
+						IdString edIdStr = new IdString(edId, edStr);
+						int pos = manylist.indexOf(edIdStr);
+						spinner.setSelection(pos);
+					}
+				}
 				break;
 			case DATE:
 			case DATETIME:
@@ -180,12 +201,14 @@ public class FormActivity extends FragmentActivity implements
 				tvDate.setOnClickListener(new OnClickListener() {
 					@Override
 					public void onClick(View v) {
-
 						FormActivity.this.showTimePickerDialog(v);
 					}
 				});
 				formViews.add(tvDate);
 				llRec.addView(tvDate);
+				if(this.editMode){
+					tvDate.setText((String) this.edtRecord.get(fieldname));
+				}
 				break;
 			//TODO Complete field types views
 			default:
@@ -211,9 +234,9 @@ public class FormActivity extends FragmentActivity implements
 							.getText().toString());
 				}
 				if (view instanceof Spinner) {
-					values.put((String) view.getTag(),
-							((IdString) ((Spinner) view).getSelectedItem())
-									.getId());
+					Integer m2id = ((IdString) ((Spinner) view).getSelectedItem())
+							.getId();
+					values.put((String) view.getTag(),m2id);
 				}
 				
 				if (view instanceof TextView) {
@@ -224,10 +247,17 @@ public class FormActivity extends FragmentActivity implements
 				
 			}
 
-			// Call AsyncTask to actually insert record
+			
 			if (goodInput) {
-				this.crAsTa = new CreateAsyncTask(this);
-				this.crAsTa.execute(values);
+				if(editMode){
+					this.wrAsTa = new WriteAsyncTask(this);
+					this.wrAsTa.execute(this.edtRecord,values,fgAsTa.getFieldTypes());
+				}
+				else{
+					// Call AsyncTask to actually insert record
+					this.crAsTa = new CreateAsyncTask(this);
+					this.crAsTa.execute(values);
+				}
 				startTree();
 				finish();
 			}
@@ -236,7 +266,7 @@ public class FormActivity extends FragmentActivity implements
 
 
 	/**
-	 * Return to TreeView on Back pressed
+	 * Return to TreeView on Back and dialog confirm
 	 */
 	@Override
 	public void onBackPressed() {
@@ -270,31 +300,8 @@ public class FormActivity extends FragmentActivity implements
 		alertDialog.setTitle("TestApp");
 		alertDialog.show();
 	}
-/*
-	private void doExit() {
 
-		AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
 
-		alertDialog.setPositiveButton(R.string.sYes,
-				new DialogInterface.OnClickListener() {
 
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						finish();
-					}
-				});
-
-		alertDialog.setNegativeButton(getString(R.string.sNo), null);
-
-		alertDialog.setMessage(getString(R.string.sCloseQ));
-		alertDialog.setTitle("TestApp");
-		alertDialog.show();
-	}
-*/
-
-	@Override
-	public void dataFetched(String[] fields, List<HashMap<String, Object>> data) {
-				
-	}
 
 }

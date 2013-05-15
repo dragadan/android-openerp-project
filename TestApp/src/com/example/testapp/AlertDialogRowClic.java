@@ -49,9 +49,15 @@ public class AlertDialogRowClic extends DialogFragment {
 			
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				if(AlertDialogRowClic.this.activity instanceof TreeActivity){
-					((TreeActivity)activity).loadForm(AlertDialogRowClic.this.rowData);
-				}		
+				if(which==0){
+					//TODO View
+				}
+				else{ //EDIT
+					if(AlertDialogRowClic.this.activity instanceof TreeActivity){
+						((TreeActivity)activity).loadForm(AlertDialogRowClic.this.rowData);
+					}	
+				}
+					
 			}
 		});
 		
