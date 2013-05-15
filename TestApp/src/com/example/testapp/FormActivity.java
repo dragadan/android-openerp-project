@@ -27,7 +27,7 @@ import com.openerp.FieldsGetAndM2PopulateAT;
 import com.openerp.WriteAsyncTask;
 
 public class FormActivity extends FragmentActivity implements
-		 FieldsGetActivityInterface, OnClickListener {
+		FieldsGetActivityInterface, OnClickListener {
 	private final static int SPACING_VERTICAL = 35;
 	private final static int SPACING_HORIZONTAL = 10;
 	private ArrayList<View> formViews;
@@ -39,7 +39,7 @@ public class FormActivity extends FragmentActivity implements
 	private HashMap<String, Object> values;
 	private HashMap<String, Object> edtRecord;
 	private CreateAsyncTask crAsTa;
-	private String[] fields;	
+	private String[] fields;
 	private FieldsGetAndM2PopulateAT fgAsTa;
 	private boolean editMode;
 	private WriteAsyncTask wrAsTa;
@@ -69,8 +69,7 @@ public class FormActivity extends FragmentActivity implements
 				this.edtRecord = (HashMap<String, Object>) extras
 						.get("edtRecord");
 				this.editMode = true;
-			}
-			else{
+			} else {
 				this.editMode = false;
 			}
 		}
@@ -127,7 +126,6 @@ public class FormActivity extends FragmentActivity implements
 	 * java.util.List)
 	 */
 
-
 	public void showTimePickerDialog(View v) {
 		DateTimePickerDialogFragment newFragment = new DateTimePickerDialogFragment();
 		newFragment.setCallerView(v);
@@ -160,10 +158,11 @@ public class FormActivity extends FragmentActivity implements
 				etName.setTag(fieldname);
 				formViews.add(etName);
 				llRec.addView(etName);
-				if(this.editMode){
-					if(!(this.edtRecord.get(fieldname) instanceof Boolean)){
+				if (this.editMode) {
+					if (!(this.edtRecord.get(fieldname) instanceof Boolean)) {
 						etName.setText((String) this.edtRecord.get(fieldname));
 					}
+
 				}
 				break;
 			case MANY2ONE:
@@ -173,7 +172,7 @@ public class FormActivity extends FragmentActivity implements
 					manylist.add(new IdString((Integer) record.get("id"),
 							(String) record.get("name")));
 				}
-				manylist.add(new IdString(0, ""));
+				manylist.add(new IdString(-1, ""));
 				Spinner spinner = new Spinner(this);
 				spinner.setTag(fieldname);
 				ArrayAdapter<IdString> spinnerArrayAdapter = new ArrayAdapter<IdString>(
@@ -182,12 +181,18 @@ public class FormActivity extends FragmentActivity implements
 				spinner.setAdapter(spinnerArrayAdapter);
 				formViews.add(spinner);
 				llRec.addView(spinner);
-				if(this.editMode){
-					if(!(this.edtRecord.get(fieldname) instanceof Boolean)){
-						int edId = (Integer) ((Object[]) this.edtRecord.get(fieldname))[0];
-						String edStr = (String) ((Object[]) this.edtRecord.get(fieldname))[1];
+				if (this.editMode) {
+					if (!(this.edtRecord.get(fieldname) instanceof Boolean)) {
+						int edId = (Integer) ((Object[]) this.edtRecord
+								.get(fieldname))[0];
+						String edStr = (String) ((Object[]) this.edtRecord
+								.get(fieldname))[1];
 						IdString edIdStr = new IdString(edId, edStr);
 						int pos = manylist.indexOf(edIdStr);
+						spinner.setSelection(pos);
+					} else {
+						IdString dummyIdStr = new IdString(-1, "");
+						int pos = manylist.indexOf(dummyIdStr);
 						spinner.setSelection(pos);
 					}
 				}
@@ -206,11 +211,13 @@ public class FormActivity extends FragmentActivity implements
 				});
 				formViews.add(tvDate);
 				llRec.addView(tvDate);
-				if(this.editMode){
-					tvDate.setText((String) this.edtRecord.get(fieldname));
+				if (this.editMode) {
+					if (!(this.edtRecord.get(fieldname) instanceof Boolean)) {
+						tvDate.setText((String) this.edtRecord.get(fieldname));
+					}
 				}
 				break;
-			//TODO Complete field types views
+			// TODO Complete field types views
 			default:
 				break;
 			}
@@ -230,30 +237,41 @@ public class FormActivity extends FragmentActivity implements
 		if (v.getId() == this.btSave.getId()) {
 			for (View view : formViews) {
 				if (view instanceof EditText) {
-					values.put((String) view.getTag(), ((EditText) view)
-							.getText().toString());
+					if (((EditText) view).getText().toString().length() == 0) {
+						values.put((String) view.getTag(), false);
+					} else {
+						values.put((String) view.getTag(), ((EditText) view)
+								.getText().toString());
+					}
 				}
 				if (view instanceof Spinner) {
-					Integer m2id = ((IdString) ((Spinner) view).getSelectedItem())
-							.getId();
-					values.put((String) view.getTag(),m2id);
+					Integer m2id = ((IdString) ((Spinner) view)
+							.getSelectedItem()).getId();
+					if (m2id == -1) {
+						values.put((String) view.getTag(), false);
+					} else {
+						values.put((String) view.getTag(), m2id);
+					}
 				}
-				
+
 				if (view instanceof TextView) {
-					values.put((String) view.getTag(),
-							((TextView) view).getText().toString());
+					if (((TextView) view).getText().toString().length() == 0) {
+						values.put((String) view.getTag(), false);
+					} else {
+						values.put((String) view.getTag(), ((TextView) view)
+								.getText().toString());
+					}
 				}
-				//TODO Complete view instance data retrieval
-				
+				// TODO Complete view instance data retrieval
+
 			}
 
-			
 			if (goodInput) {
-				if(editMode){
+				if (editMode) {
 					this.wrAsTa = new WriteAsyncTask(this);
-					this.wrAsTa.execute(this.edtRecord,values,fgAsTa.getFieldTypes());
-				}
-				else{
+					this.wrAsTa.execute(this.edtRecord, values,
+							fgAsTa.getFieldTypes());
+				} else {
 					// Call AsyncTask to actually insert record
 					this.crAsTa = new CreateAsyncTask(this);
 					this.crAsTa.execute(values);
@@ -264,7 +282,6 @@ public class FormActivity extends FragmentActivity implements
 		}
 	}
 
-
 	/**
 	 * Return to TreeView on Back and dialog confirm
 	 */
@@ -272,10 +289,9 @@ public class FormActivity extends FragmentActivity implements
 	public void onBackPressed() {
 		goBackDiscard();
 	}
-	
-	private void startTree(){
-		Intent i = new Intent(getBaseContext(),
-				TreeActivity.class);
+
+	private void startTree() {
+		Intent i = new Intent(getBaseContext(), TreeActivity.class);
 		startActivity(i);
 	}
 
@@ -290,7 +306,7 @@ public class FormActivity extends FragmentActivity implements
 					public void onClick(DialogInterface dialog, int which) {
 						FormActivity.this.startTree();
 						finish();
-						
+
 					}
 				});
 
@@ -300,8 +316,5 @@ public class FormActivity extends FragmentActivity implements
 		alertDialog.setTitle("TestApp");
 		alertDialog.show();
 	}
-
-
-
 
 }
