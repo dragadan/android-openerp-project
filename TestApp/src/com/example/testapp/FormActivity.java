@@ -3,23 +3,22 @@ package com.example.testapp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
+import java.util.Locale;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
-import android.widget.TableRow;
 import android.widget.TextView;
 
 import com.openerp.CreateAsyncTask;
@@ -43,6 +42,7 @@ public class FormActivity extends FragmentActivity implements
 	private FieldsGetAndM2PopulateAT fgAsTa;
 	private boolean editMode;
 	private WriteAsyncTask wrAsTa;
+	private HashMap<String, Object> fieldsAttrs;
 
 	public enum OoType {
 		BOOLEAN, INTEGER, FLOAT, CHAR, TEXT, DATE, DATETIME, BINARY, SELECTION, ONE2ONE, MANY2ONE, ONE2MANY, MANY2MANY, RELATED,
@@ -76,18 +76,18 @@ public class FormActivity extends FragmentActivity implements
 		this.values = new HashMap<String, Object>();
 		this.fgAsTa = new FieldsGetAndM2PopulateAT(this, this.fields);
 		this.fgAsTa.execute(this.fields);
-		new HashMap<String, String>();
+		this.fieldsAttrs = fgAsTa.getFieldAttrs();
 	}
 
 	private void inicialiceLayout() {
 
 		// Layout params definition
 		LinearLayout.LayoutParams llpMatch = new LinearLayout.LayoutParams(
-				LinearLayout.LayoutParams.MATCH_PARENT,
-				LinearLayout.LayoutParams.MATCH_PARENT);
+				LayoutParams.MATCH_PARENT,
+				LayoutParams.MATCH_PARENT);
 		LinearLayout.LayoutParams llpWrap = new LinearLayout.LayoutParams(
-				LinearLayout.LayoutParams.MATCH_PARENT,
-				LinearLayout.LayoutParams.WRAP_CONTENT);
+				LayoutParams.MATCH_PARENT,
+				LayoutParams.WRAP_CONTENT);
 
 		// Create layouts and apply params
 		this.mainFrame = new LinearLayout(this);
@@ -150,8 +150,7 @@ public class FormActivity extends FragmentActivity implements
 			TextView tvLabel = new TextView(this);
 			tvLabel.setText(fieldname);
 			llRec.addView(tvLabel);
-			switch (OoType
-					.valueOf(fgAsTa.getFieldType(fieldname).toUpperCase())) {
+			switch (OoType.valueOf(fgAsTa.getFieldType(fieldname).toUpperCase(Locale.US))) {
 			case TEXT:
 			case CHAR:
 				EditText etName = new EditText(this);
@@ -168,13 +167,17 @@ public class FormActivity extends FragmentActivity implements
 			case MANY2ONE:
 			case MANY2MANY:
 				LinkedList<IdString> manylist = new LinkedList<IdString>();
+				Spinner spinner = new Spinner(this);
+				spinner.setTag(fieldname);		
+				//Blank many2list option
+				IdString dummyIdStr = new IdString(-1, "");
+				int pos = manylist.indexOf(dummyIdStr);		
+				spinner.setSelection(pos); //Set as default
+				//--
 				for (HashMap<String, Object> record : fgAsTa.getList(fieldname)) {
 					manylist.add(new IdString((Integer) record.get("id"),
 							(String) record.get("name")));
-				}
-				manylist.add(new IdString(-1, ""));
-				Spinner spinner = new Spinner(this);
-				spinner.setTag(fieldname);
+				}							
 				ArrayAdapter<IdString> spinnerArrayAdapter = new ArrayAdapter<IdString>(
 						this, android.R.layout.simple_spinner_dropdown_item,
 						manylist);
@@ -188,13 +191,9 @@ public class FormActivity extends FragmentActivity implements
 						String edStr = (String) ((Object[]) this.edtRecord
 								.get(fieldname))[1];
 						IdString edIdStr = new IdString(edId, edStr);
-						int pos = manylist.indexOf(edIdStr);
+						pos = manylist.indexOf(edIdStr);
 						spinner.setSelection(pos);
-					} else {
-						IdString dummyIdStr = new IdString(-1, "");
-						int pos = manylist.indexOf(dummyIdStr);
-						spinner.setSelection(pos);
-					}
+					} 
 				}
 				break;
 			case DATE:
@@ -218,6 +217,11 @@ public class FormActivity extends FragmentActivity implements
 				}
 				break;
 			// TODO Complete field types views
+			case BINARY:
+				break;
+			case SELECTION:
+				
+				break;
 			default:
 				break;
 			}
@@ -269,8 +273,7 @@ public class FormActivity extends FragmentActivity implements
 			if (goodInput) {
 				if (editMode) {
 					this.wrAsTa = new WriteAsyncTask(this);
-					this.wrAsTa.execute(this.edtRecord, values,
-							fgAsTa.getFieldTypes());
+					this.wrAsTa.execute(this.edtRecord, values);
 				} else {
 					// Call AsyncTask to actually insert record
 					this.crAsTa = new CreateAsyncTask(this);

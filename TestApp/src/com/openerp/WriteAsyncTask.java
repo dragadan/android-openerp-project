@@ -1,14 +1,9 @@
 package com.openerp;
 
 import java.util.HashMap;
-import java.util.Map.Entry;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
-import android.util.Log;
-
-import com.example.testapp.FormActivity;
 import com.example.testapp.R;
 
 public class WriteAsyncTask extends
@@ -43,28 +38,13 @@ public class WriteAsyncTask extends
 	 * Writes record 
 	 * values[0] -> Original values 
 	 * values[1] -> Modified values
-	 * values[2] -> Fields Types
+	 * values[2] -> Fields Types -> Necessary?
 	 */
 	@Override
 	protected Boolean doInBackground(HashMap<String, Object>... values) {
 		Boolean writeOk = false;
 		loadConnection();
 		
-		// For each original value check if it has been changed to write.
-		/*
-		for (Entry<String, Object> entry : values[0].entrySet()) {
-			if (values[1].containsKey(entry.getKey())) {
-				if (entry.getValue() != values[1].get(entry.getKey())) {				
-					String fieldtype = values[2].get(entry.getKey()).toString();
-					if (fieldtype.startsWith("many2")) {
-
-					} else {
-						
-					}
-				}
-			}
-		}
-		*/
 		if(values[0].containsKey("id")){
 			Object oid = values[0].get("id");
 			Long lid = Long.valueOf(oid.toString());

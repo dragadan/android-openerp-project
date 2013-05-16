@@ -2,26 +2,25 @@ package com.example.testapp;
 
 import java.util.HashMap;
 import java.util.List;
-import android.app.Activity;
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
-import android.support.v4.app.FragmentActivity;
 
 import com.openerp.OpenErpHolder;
 import com.openerp.ReadAsyncTask;
@@ -72,11 +71,11 @@ public class TreeActivity extends FragmentActivity implements ReadActivityInterf
 
 		// Layout params definition
 		LinearLayout.LayoutParams llpMatch = new LinearLayout.LayoutParams(
-				LinearLayout.LayoutParams.MATCH_PARENT,
-				LinearLayout.LayoutParams.MATCH_PARENT);
+				LayoutParams.MATCH_PARENT,
+				LayoutParams.MATCH_PARENT);
 		LinearLayout.LayoutParams llpWrap = new LinearLayout.LayoutParams(
-				LinearLayout.LayoutParams.MATCH_PARENT,
-				LinearLayout.LayoutParams.WRAP_CONTENT);
+				LayoutParams.MATCH_PARENT,
+				LayoutParams.WRAP_CONTENT);
 
 		// Create layouts and apply params
 		this.mainFrame = new LinearLayout(this);

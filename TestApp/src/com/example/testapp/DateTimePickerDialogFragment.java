@@ -1,5 +1,4 @@
 package com.example.testapp;
-import java.sql.Date;
 import java.util.Calendar;
 
 import android.app.DatePickerDialog;
@@ -39,10 +38,10 @@ public class DateTimePickerDialogFragment extends DialogFragment implements
 		// Do something with the time chosen by the user
     	Calendar c = Calendar.getInstance();
     	c.set(year, month, day);
-    	DateFormat df = new DateFormat();
-    	String formattedDate = df.format("yyyy-MM-dd", c).toString();
+    	String formattedDate = DateFormat.format("yyyy-MM-dd", c).toString();
 		((TextView)asocView).setText(formattedDate);
 	}
+	@Override
 	public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
 		// Do something with the time chosen by the user
 		//((TextView)asocView).setText(String.valueOf(hourOfDay)+":"+String.valueOf(minute));

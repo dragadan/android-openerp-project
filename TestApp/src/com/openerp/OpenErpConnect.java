@@ -232,7 +232,7 @@ public class OpenErpConnect {
         HashMap<String, Object> fieldValue = null;
         try {
             XMLRPCClient client = new XMLRPCClient(mUrl);
-            Object responseField = (Object)client.call("execute", mDatabase, mUserId, mPassword, model, "fields_view_get");
+            Object responseField = client.call("execute", mDatabase, mUserId, mPassword, model, "fields_view_get");
             fieldValue = (HashMap<String, Object>)responseField;
            
         } catch (XMLRPCException e) {
@@ -245,7 +245,7 @@ public class OpenErpConnect {
         HashMap<String, Object> fieldValue = null;
         try {
             XMLRPCClient client = new XMLRPCClient(mUrl);
-            Object responseField = (Object)client.call("execute", mDatabase, mUserId, mPassword, model, "fields_get");
+            Object responseField = client.call("execute", mDatabase, mUserId, mPassword, model, "fields_get");
             fieldValue = (HashMap<String, Object>)responseField;
            
         } catch (XMLRPCException e) {
@@ -380,7 +380,8 @@ public class OpenErpConnect {
      * @return String representation of the OpenErpConnection instance, good for
      * debugging purposes. You can comment the password if you want.
      * */
-    public String toString() {
+    @Override
+	public String toString() {
         StringBuilder stringConn = new StringBuilder();
         stringConn.append("server: " + mServer + "\n");
         stringConn.append("port: " + mPort + "\n");

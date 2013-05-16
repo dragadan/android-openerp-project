@@ -45,7 +45,8 @@ public class FieldsGetAndM2PopulateAT extends FieldsGetAsyncTask {
 		return relation;
 	}
 	
-	public HashMap<String, Object> getFieldTypes(){
+	
+	public HashMap<String, Object> getFieldAttrs(){
 		return data;
 	}
 
@@ -62,5 +63,7 @@ public class FieldsGetAndM2PopulateAT extends FieldsGetAsyncTask {
 	public List<HashMap<String, Object>> getList(String fieldname) {
 		return M2data.get(fieldname);
 	}
+	
+	
 
 }

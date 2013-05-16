@@ -36,6 +36,7 @@ public class ConnectAsyncTask extends
 		this.oc = OpenErpHolder.oc;
 	}
 
+	@Override
 	protected OpenErpConnect doInBackground(String... params) {
 		loadConnection();
 		oc = OpenErpConnect.connect(params[0], Integer.parseInt(params[1]), params[2],
@@ -44,12 +45,14 @@ public class ConnectAsyncTask extends
 	}
 
 	// This is called each time you call publishProgress()
-	 protected void onProgressUpdate(Integer... progress) {
+	 @Override
+	protected void onProgressUpdate(Integer... progress) {
          
      }
 	 
 
 	// This is called when doInBackground() is finished
+	@Override
 	protected void onPostExecute(OpenErpConnect result) {
 		String failMsg = activity.getString(R.string.sCheckSettings);
 		super.onPostExecute(null);
@@ -70,6 +73,7 @@ public class ConnectAsyncTask extends
 					.setCancelable(false)
 					.setNegativeButton("OK",
 							new DialogInterface.OnClickListener() {
+								@Override
 								public void onClick(DialogInterface dialog,
 										int id) {
 									dialog.cancel();

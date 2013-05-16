@@ -10,7 +10,6 @@ public class TableRowCustom extends TableRow{
 
 	private OnClickListener shortClicListener;
 	private Context context;
-	private int id;
 	private HashMap<String, Object> rowData;
 	
 	public TableRowCustom(Context context) {

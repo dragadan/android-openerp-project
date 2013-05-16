@@ -1,7 +1,5 @@
 package com.openerp;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -11,7 +9,6 @@ import android.os.AsyncTask;
 
 import com.example.testapp.R;
 import com.example.testapp.ReadActivityInterface;
-import com.example.testapp.TreeActivity;
 
 public class ReadAsyncTask extends AsyncTask<String, String, OpenErpConnect> {
 	public ProgressDialog dialog;
