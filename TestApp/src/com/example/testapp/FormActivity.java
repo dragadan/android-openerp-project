@@ -171,6 +171,7 @@ public class FormActivity extends FragmentActivity implements
 				spinner.setTag(fieldname);		
 				//Blank many2list option
 				IdString dummyIdStr = new IdString(-1, "");
+                manylist.add(dummyIdStr);
 				int pos = manylist.indexOf(dummyIdStr);		
 				spinner.setSelection(pos); //Set as default
 				//--
