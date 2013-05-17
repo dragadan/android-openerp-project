@@ -36,6 +36,7 @@ public class TreeActivity extends FragmentActivity implements ReadActivityInterf
 	private final static int SPACING_VERTICAL = 35;
 	private final static int SPACING_HORIZONTAL = 10;
 	private ScrollView svRec;
+    private WScrollView wsvRec;
 	private LinearLayout llRec;
 	private LinearLayout mainFrame;
 	private LinearLayout llTop;
@@ -56,9 +57,9 @@ public class TreeActivity extends FragmentActivity implements ReadActivityInterf
 	private void startRead() {
 		// TODO check if params are set and raise exception if not
 		// TODO parametrice infields or use view_fields_get from OpenERPConnect to choos fields
-		String [] theFields = {"name","login","email","organization_id","login_date"};
+		String [] theFields = {"name","account_id","company_id","partner_id","date_due","amount_tax","internal_number","date_invoice","amount_total"};
 		this.inFields = theFields;
-		this.modelName = "res.users";
+		this.modelName = "account.invoice";
 		
 
 		OpenErpHolder.modelName = this.modelName;
@@ -90,6 +91,9 @@ public class TreeActivity extends FragmentActivity implements ReadActivityInterf
 		this.llTop.setPadding(SPACING_HORIZONTAL, SPACING_VERTICAL, 0, 0);
 
 		this.svRec = new ScrollView(this);
+        this.wsvRec = new WScrollView(this);
+        this.wsvRec.sv = this.svRec;
+
 
 		this.llRec = new LinearLayout(this);
 		this.llRec.setLayoutParams(llpWrap);
@@ -102,8 +106,9 @@ public class TreeActivity extends FragmentActivity implements ReadActivityInterf
 		// Define view structure
 		this.llTop.addView(bCreate);
 		this.svRec.addView(llRec);
+        this.wsvRec.addView(svRec);
 		this.mainFrame.addView(llTop);
-		this.mainFrame.addView(svRec);
+		this.mainFrame.addView(wsvRec);
 
 		// Set content view
 		setContentView(this.mainFrame, llpMatch);
