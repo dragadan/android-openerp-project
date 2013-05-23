@@ -9,6 +9,7 @@
     <EditTextPreference
             android:key="serverPort"
             android:defaultValue="8069"
+            android:inputType="number"
             android:summary="@string/sServerPortSummary"
             android:title="@string/sServerPort"/>
     <EditTextPreference

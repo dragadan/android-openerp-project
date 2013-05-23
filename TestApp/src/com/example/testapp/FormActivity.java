@@ -1,34 +1,32 @@
 package com.example.testapp;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Locale;
-
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.text.InputType;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
-import android.widget.Spinner;
-import android.widget.TextView;
-
+import android.widget.*;
 import com.openerp.CreateAsyncTask;
 import com.openerp.FieldsGetAndM2PopulateAT;
+import com.openerp.OpenErpHolder;
 import com.openerp.WriteAsyncTask;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Locale;
 
 public class FormActivity extends FragmentActivity implements
         FieldsGetActivityInterface, OnClickListener {
     private final static int SPACING_VERTICAL = 35;
     private final static int SPACING_HORIZONTAL = 10;
+    private final static int DOWNLOAD_BUTTON_ID = 1210;
+    private final static int UPLOAD_BUTTON_ID = 1211;
+    private final static int CLEAR_BUTTON_ID = 1212;
     private ArrayList<View> formViews;
     private ScrollView svRec;
     private LinearLayout llRec;
@@ -39,14 +37,10 @@ public class FormActivity extends FragmentActivity implements
     private HashMap<String, Object> edtRecord;
     private CreateAsyncTask crAsTa;
     private String[] fields;
-    private FieldsGetAndM2PopulateAT fgAsTa;
+    private FieldsGetAndM2PopulateAT fgAsTaAM2;
     private boolean editMode;
     private WriteAsyncTask wrAsTa;
     private HashMap<String, Object> fieldsAttrs;
-
-    public enum OoType {
-        BOOLEAN, INTEGER, FLOAT, CHAR, TEXT, DATE, DATETIME, BINARY, SELECTION, ONE2ONE, MANY2ONE, ONE2MANY, MANY2MANY, RELATED,
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,8 +68,8 @@ public class FormActivity extends FragmentActivity implements
             }
         }
         this.values = new HashMap<String, Object>();
-        this.fgAsTa = new FieldsGetAndM2PopulateAT(this, this.fields);
-        this.fgAsTa.execute(this.fields);
+        this.fgAsTaAM2 = new FieldsGetAndM2PopulateAT(this, this.fields);
+        this.fgAsTaAM2.execute(this.fields);
 
     }
 
@@ -120,18 +114,12 @@ public class FormActivity extends FragmentActivity implements
 
 	/*
      * Read field values (To read m2o and m2m fields)
-	 * 
+	 *
 	 * @see
 	 * com.example.testapp.ReadActivityInterface#dataFetched(java.lang.String[],
 	 * java.util.List)
 	 */
 
-    public void showTimePickerDialog(View v) {
-        DateTimePickerDialogFragment newFragment = new DateTimePickerDialogFragment();
-        newFragment.setCallerView(v);
-        newFragment.show(getSupportFragmentManager(), "timePicker");
-
-    }
 
     /*
      * Read field types to decide the view layout (Called when
@@ -149,11 +137,26 @@ public class FormActivity extends FragmentActivity implements
         formViews = new ArrayList<View>();
         for (String fieldname : this.fields) {
             TextView tvLabel = new TextView(this);
-            tvLabel.setText(fieldname);
+            String headerText = (String) ((HashMap <String,Object>)this.fieldsAttrs.get(fieldname)).get("string");
+            tvLabel.setText(headerText);
             llRec.addView(tvLabel);
-            switch (OoType.valueOf(fgAsTa.getFieldType(fieldname).toUpperCase(Locale.US))) {
-                case TEXT:
+            HashMap<String,Object> fAttr = (HashMap<String, Object>) this.fieldsAttrs.get(fieldname);
+            String ftype = ((String) fAttr.get("type")).toUpperCase(Locale.US);
+            switch (OpenErpHolder.OoType.valueOf(ftype)) {
+                case INTEGER:
+                    EditText etInt = new EditText(this);
+                    etInt.setInputType(InputType.TYPE_CLASS_NUMBER);
+                    etInt.setTag(fieldname);
+                    llRec.addView(etInt);
+                    if(this.editMode){
+                        if (!(this.edtRecord.get(fieldname) instanceof Boolean)) {
+                            etInt.setText(this.edtRecord.get(fieldname).toString());
+                        }
+                    }
+                case FLOAT:
+                    break;
                 case CHAR:
+                case TEXT:
                     EditText etName = new EditText(this);
                     etName.setTag(fieldname);
                     formViews.add(etName);
@@ -165,8 +168,59 @@ public class FormActivity extends FragmentActivity implements
 
                     }
                     break;
+                case DATE:
+                    TextView tvDate = new TextView(this, null,
+                            android.R.attr.spinnerStyle);
+                    tvDate.setTag(fieldname);
+
+                    tvDate.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // Create the fragment and show it as a dialog.
+                            DateTimePickerDialog newFragment = new DateTimePickerDialog(v,false);
+                            newFragment.show(FormActivity.this.getSupportFragmentManager(), "DatePick");
+                        }
+                    });
+                    formViews.add(tvDate);
+                    llRec.addView(tvDate);
+                    if (this.editMode) {
+                        if (!(this.edtRecord.get(fieldname) instanceof Boolean)) {
+                            tvDate.setText((String) this.edtRecord.get(fieldname));
+                        }
+                    }
+                    break;
+                case DATETIME:
+                    TextView tvDateTime = new TextView(this, null,
+                            android.R.attr.spinnerStyle);
+                    tvDateTime.setTag(fieldname);
+
+                    tvDateTime.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // Create the fragment and show it as a dialog.
+                            DateTimePickerDialog newFragment = new DateTimePickerDialog(v, true);
+                            newFragment.show(FormActivity.this.getSupportFragmentManager(), "DateTimePick");
+                        }
+                    });
+                    formViews.add(tvDateTime);
+                    llRec.addView(tvDateTime);
+                    if (this.editMode) {
+                        if (!(this.edtRecord.get(fieldname) instanceof Boolean)) {
+                            tvDateTime.setText((String) this.edtRecord.get(fieldname));
+                        }
+                    }
+                    break;
+                case BINARY:
+                    Button downloadBt = new Button(this);
+                    downloadBt.setText(getString(R.string.sDownload));
+                    downloadBt.setId(DOWNLOAD_BUTTON_ID);
+                    llRec.addView(downloadBt);
+                    break;
+                case SELECTION:
+                    break;
+                case ONE2ONE:
+                    break;
                 case MANY2ONE:
-                case MANY2MANY:
                     LinkedList<IdString> manylist = new LinkedList<IdString>();
                     Spinner spinner = new Spinner(this);
                     spinner.setTag(fieldname);
@@ -176,7 +230,7 @@ public class FormActivity extends FragmentActivity implements
                     int pos = manylist.indexOf(dummyIdStr);
                     spinner.setSelection(pos); //Set as default
                     //--
-                    for (HashMap<String, Object> record : fgAsTa.getList(fieldname)) {
+                    for (HashMap<String, Object> record : fgAsTaAM2.getList(fieldname)) {
                         manylist.add(new IdString((Integer) record.get("id"),
                                 (String) record.get("name")));
                     }
@@ -190,40 +244,22 @@ public class FormActivity extends FragmentActivity implements
                         if (!(this.edtRecord.get(fieldname) instanceof Boolean)) {
                             int edId = (Integer) ((Object[]) this.edtRecord
                                     .get(fieldname))[0];
-                            String edStr = (String) ((Object[]) this.edtRecord
-                                    .get(fieldname))[1];
+                            String edStr =  ((Object[]) this.edtRecord
+                                    .get(fieldname))[1].toString();
                             IdString edIdStr = new IdString(edId, edStr);
                             pos = manylist.indexOf(edIdStr);
                             spinner.setSelection(pos);
                         }
                     }
                     break;
-                case DATE:
-                case DATETIME:
-                    TextView tvDate = new TextView(this, null,
-                            android.R.attr.spinnerStyle);
-                    tvDate.setTag(fieldname);
-
-                    tvDate.setOnClickListener(new OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            FormActivity.this.showTimePickerDialog(v);
-                        }
-                    });
-                    formViews.add(tvDate);
-                    llRec.addView(tvDate);
-                    if (this.editMode) {
-                        if (!(this.edtRecord.get(fieldname) instanceof Boolean)) {
-                            tvDate.setText((String) this.edtRecord.get(fieldname));
-                        }
-                    }
+                case ONE2MANY:
+                    break;
+                case MANY2MANY:
+                    break;
+                case RELATED:
                     break;
                 // TODO Complete field types views
-                case BINARY:
-                    break;
-                case SELECTION:
 
-                    break;
                 default:
                     break;
             }
@@ -284,6 +320,10 @@ public class FormActivity extends FragmentActivity implements
                 startTree();
                 finish();
             }
+        }
+
+        if(v.getId() == DOWNLOAD_BUTTON_ID){
+
         }
     }
 

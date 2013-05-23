@@ -27,5 +27,7 @@
     <string name="sDiscard">Do you want to discard changes?</string>
     <string name="sView">View</string>
     <string name="sEdit">Edit</string>
+    <string name="sRecords">Records</string>
+    <string name="sDownload">Download File</string>
 
 </resources>

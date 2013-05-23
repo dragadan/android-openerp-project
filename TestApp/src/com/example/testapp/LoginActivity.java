@@ -99,7 +99,7 @@ public class LoginActivity extends Activity {
 
 	public void doLogin(View view) {
 		ConnectAsyncTask conAsT = new ConnectAsyncTask(this);
-		conAsT.execute(serverHost, serverPort, serverDBName, edtUser.getText()
+		conAsT.execute(serverHost, serverPort.toString(), serverDBName, edtUser.getText()
 				.toString(), edtPassword.getText().toString());
 		Log.d("Connecting...", "...");
 	}
