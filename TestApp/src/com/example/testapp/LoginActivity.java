@@ -44,15 +44,53 @@ public class LoginActivity extends Activity {
 		return true;
 	}
 
-	@Override
+    public void setServerPort(String serverPort) {
+        this.serverPort = serverPort;
+    }
+
+    public void setServerHost(String serverHost) {
+        this.serverHost = serverHost;
+    }
+
+    public void setServerDBName(String serverDBName) {
+        this.serverDBName = serverDBName;
+    }
+
+    @Override
 	public boolean onOptionsItemSelected(MenuItem item) { 
 		// Handle item selection (only 1 option so we don't check item)
 		viewSettings();
+
 		return true;
 	}
 
-	private void viewSettings() {
+    public String getServerHost() {
+        return serverHost;
+    }
+
+    public String getServerPort() {
+        return serverPort;
+    }
+
+    public String getServerDBName() {
+        return serverDBName;
+    }
+
+    public Button getBtnLogin() {
+        return btnLogin;
+    }
+
+    public EditText getEdtUser() {
+        return edtUser;
+    }
+
+    public EditText getEdtPassword() {
+        return edtPassword;
+    }
+
+    private void viewSettings() {
 		Intent i = new Intent(this, PrefsActivity.class);
+
 		startActivityForResult(i, RESULT_SETTINGS);
 	}
 

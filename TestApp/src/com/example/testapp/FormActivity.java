@@ -22,25 +22,31 @@ import java.util.Locale;
 
 public class FormActivity extends FragmentActivity implements
         FieldsGetActivityInterface, OnClickListener {
-    private final static int SPACING_VERTICAL = 35;
+    private final static int SPACING_VERTICAL = 25;
     private final static int SPACING_HORIZONTAL = 10;
     private final static int DOWNLOAD_BUTTON_ID = 1210;
+    private final static int INTVAL = 2; //For integer Fields
+    private final static int STRVAL = 3; //For Char and Text Fields
+    private final static int DOUBLEVAL = 4; //For Float fields
+    private final static int BOOLVAL = 5; // For Boolean Fields
+    private final static int OBJVAl = 6;
+    private final static int OBJARRVAL = 7;
     private final static int UPLOAD_BUTTON_ID = 1211;
     private final static int CLEAR_BUTTON_ID = 1212;
-    private ArrayList<View> formViews;
-    private ScrollView svRec;
-    private LinearLayout llRec;
-    private LinearLayout mainFrame;
-    private LinearLayout llTop;
-    private Button btSave;
-    private HashMap<String, Object> values;
-    private HashMap<String, Object> edtRecord;
-    private CreateAsyncTask crAsTa;
-    private String[] fields;
-    private FieldsGetAndM2PopulateAT fgAsTaAM2;
-    private boolean editMode;
-    private WriteAsyncTask wrAsTa;
-    private HashMap<String, Object> fieldsAttrs;
+    private ArrayList<View> mFormViews;
+    private ScrollView mSvRecords;
+    private LinearLayout mLlRecordframe;
+    private LinearLayout mLlMainframe;
+    private LinearLayout mLlTopframe;
+    private Button mBSave;
+    private HashMap<String, Object> mValues;
+    private boolean mEditMode;
+    private HashMap<String, Object> mValuesToEdit;
+    private CreateAsyncTask mCreateTask;
+    private String[] mFieldNames;
+    private FieldsGetAndM2PopulateAT mFieldsGetTask;
+    private WriteAsyncTask mWriteTask;
+    private HashMap<String, Object> mFieldsAttributes; //Fields OpenERP Attributes
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,24 +58,24 @@ public class FormActivity extends FragmentActivity implements
 
     @SuppressWarnings("unchecked")
     private void inicializeVars() {
-        this.edtRecord = null;
-        this.fields = null;
+        this.mValuesToEdit = null;
+        this.mFieldNames = null;
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            if (extras.containsKey("fields")) {
-                this.fields = extras.getStringArray("fields");
+            if (extras.containsKey("mFieldNames")) {
+                this.mFieldNames = extras.getStringArray("mFieldNames");
             }
-            if (extras.containsKey("edtRecord")) {
-                this.edtRecord = (HashMap<String, Object>) extras
-                        .get("edtRecord");
-                this.editMode = true;
+            if (extras.containsKey("mValuesToEdit")) {
+                this.mValuesToEdit = (HashMap<String, Object>) extras
+                        .get("mValuesToEdit");
+                this.mEditMode = true;
             } else {
-                this.editMode = false;
+                this.mEditMode = false;
             }
         }
-        this.values = new HashMap<String, Object>();
-        this.fgAsTaAM2 = new FieldsGetAndM2PopulateAT(this, this.fields);
-        this.fgAsTaAM2.execute(this.fields);
+        this.mValues = new HashMap<String, Object>();
+        this.mFieldsGetTask = new FieldsGetAndM2PopulateAT(this, this.mFieldNames);
+        this.mFieldsGetTask.execute(this.mFieldNames);
 
     }
 
@@ -84,42 +90,45 @@ public class FormActivity extends FragmentActivity implements
                 LayoutParams.WRAP_CONTENT);
 
         // Create layouts and apply params
-        this.mainFrame = new LinearLayout(this);
-        this.mainFrame.setOrientation(LinearLayout.VERTICAL);
+        this.mLlMainframe = new LinearLayout(this);
+        this.mLlMainframe.setOrientation(LinearLayout.VERTICAL);
 
-        this.btSave = new Button(this);
-        this.btSave.setText(R.string.sSave);
-        this.btSave.setOnClickListener(this);
+        this.mBSave = new Button(this);
+        this.mBSave.setText(R.string.sSave);
+        this.mBSave.setOnClickListener(this);
 
-        this.llTop = new LinearLayout(this);
-        this.llTop.setLayoutParams(llpWrap);
-        this.llTop.setPadding(SPACING_HORIZONTAL, SPACING_VERTICAL, 0, 0);
+        this.mLlTopframe = new LinearLayout(this);
+        this.mLlTopframe.setLayoutParams(llpWrap);
+        this.mLlTopframe.setPadding(SPACING_HORIZONTAL, SPACING_VERTICAL, 0, 0);
 
-        this.svRec = new ScrollView(this);
+        this.mSvRecords = new ScrollView(this);
 
-        this.llRec = new LinearLayout(this);
-        this.llRec.setLayoutParams(llpWrap);
-        this.llRec.setOrientation(LinearLayout.VERTICAL);
-        this.llRec.setPadding(SPACING_HORIZONTAL, SPACING_VERTICAL, 0, 0);
+        this.mLlRecordframe = new LinearLayout(this);
+        this.mLlRecordframe.setLayoutParams(llpWrap);
+        this.mLlRecordframe.setOrientation(LinearLayout.VERTICAL);
+        this.mLlRecordframe.setPadding(SPACING_HORIZONTAL, SPACING_VERTICAL, 0, 0);
 
         // Define view structure
-        this.llTop.addView(btSave);
-        this.svRec.addView(llRec);
-        this.mainFrame.addView(llTop);
-        this.mainFrame.addView(svRec);
+        this.mLlTopframe.addView(mBSave);
+        this.mSvRecords.addView(mLlRecordframe);
+        this.mLlMainframe.addView(mLlTopframe);
+        this.mLlMainframe.addView(mSvRecords);
 
         // Set content view
-        setContentView(this.mainFrame, llpMatch);
+        setContentView(this.mLlMainframe, llpMatch);
     }
 
-	/*
-     * Read field values (To read m2o and m2m fields)
-	 *
-	 * @see
-	 * com.example.testapp.ReadActivityInterface#dataFetched(java.lang.String[],
-	 * java.util.List)
-	 */
 
+    /**
+     * Get OpenERP Field Type in string
+     * @param fieldname
+     * @return field type
+     */
+    private String getFieldType(String fieldname){
+        HashMap<String,Object> fAttr = (HashMap<String, Object>) this.mFieldsAttributes.get(fieldname);
+        String ftype = ((String) fAttr.get("type")).toUpperCase(Locale.US);
+        return ftype;
+    }
 
     /*
      * Read field types to decide the view layout (Called when
@@ -132,47 +141,74 @@ public class FormActivity extends FragmentActivity implements
     @Override
     public void fieldsFetched(HashMap<String, Object> data) {
         // Draws layout
-        // formViews array holds the views to retrieve data on Save
-        this.fieldsAttrs = data;
-        formViews = new ArrayList<View>();
-        for (String fieldname : this.fields) {
+        // The views arraylist holds the views to retrieve data on Save
+        this.mFieldsAttributes = data;
+        mFormViews = new ArrayList<View>();
+        int fieldcount = 0;
+        for (String fieldname : this.mFieldNames) {
+            fieldcount++;
             TextView tvLabel = new TextView(this);
-            String headerText = (String) ((HashMap <String,Object>)this.fieldsAttrs.get(fieldname)).get("string");
+            String headerText = (String) ((HashMap <String,Object>)this.mFieldsAttributes.get(fieldname)).get("string");
             tvLabel.setText(headerText);
-            llRec.addView(tvLabel);
-            HashMap<String,Object> fAttr = (HashMap<String, Object>) this.fieldsAttrs.get(fieldname);
-            String ftype = ((String) fAttr.get("type")).toUpperCase(Locale.US);
+            tvLabel.setPadding(0, SPACING_VERTICAL, 0, 0);
+            mLlRecordframe.addView(tvLabel);
+            String ftype = getFieldType(fieldname);
             switch (OpenErpHolder.OoType.valueOf(ftype)) {
+                case BOOLEAN:
+                    CheckBox cb = new CheckBox(this);
+                    cb.setTag(fieldname);
+                    mFormViews.add(cb);
+                    mLlRecordframe.addView(cb);
+                    cb.setId(BOOLVAL*1000 + fieldcount);
+                    if(this.mEditMode){
+                        Boolean checked = (Boolean) this.mValuesToEdit.get(fieldname);
+                        cb.setChecked(checked);
+                    }
+                    cb.setClickable(true);
+                    break;
                 case INTEGER:
                     EditText etInt = new EditText(this);
                     etInt.setInputType(InputType.TYPE_CLASS_NUMBER);
                     etInt.setTag(fieldname);
-                    llRec.addView(etInt);
-                    if(this.editMode){
-                        if (!(this.edtRecord.get(fieldname) instanceof Boolean)) {
-                            etInt.setText(this.edtRecord.get(fieldname).toString());
+                    etInt.setId(INTVAL*1000 + fieldcount);
+                    mFormViews.add(etInt);
+                    mLlRecordframe.addView(etInt);
+                    if(this.mEditMode){
+                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
+                            etInt.setText(this.mValuesToEdit.get(fieldname).toString());
                         }
                     }
+                    break;
                 case FLOAT:
+                    EditText etFloat = new EditText(this);
+                    etFloat.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                    etFloat.setTag(fieldname);
+                    etFloat.setId(DOUBLEVAL*1000 + fieldcount);
+                    mFormViews.add(etFloat);
+                    mLlRecordframe.addView(etFloat);
+                    if(this.mEditMode){
+                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
+                            etFloat.setText(this.mValuesToEdit.get(fieldname).toString());
+                        }
+                    }
                     break;
                 case CHAR:
                 case TEXT:
-                    EditText etName = new EditText(this);
-                    etName.setTag(fieldname);
-                    formViews.add(etName);
-                    llRec.addView(etName);
-                    if (this.editMode) {
-                        if (!(this.edtRecord.get(fieldname) instanceof Boolean)) {
-                            etName.setText((String) this.edtRecord.get(fieldname));
+                    EditText etStrfield = new EditText(this);
+                    etStrfield.setTag(fieldname);
+                    etStrfield.setId(STRVAL*1000 + fieldcount);
+                    mFormViews.add(etStrfield);
+                    mLlRecordframe.addView(etStrfield);
+                    if (this.mEditMode) {
+                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
+                            etStrfield.setText((String) this.mValuesToEdit.get(fieldname));
                         }
-
                     }
                     break;
                 case DATE:
-                    TextView tvDate = new TextView(this, null,
-                            android.R.attr.spinnerStyle);
+                    TextView tvDate = new TextView(this, null,android.R.attr.spinnerStyle);
                     tvDate.setTag(fieldname);
-
+                    tvDate.setId(STRVAL*1000 +fieldcount);
                     tvDate.setOnClickListener(new OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -181,19 +217,18 @@ public class FormActivity extends FragmentActivity implements
                             newFragment.show(FormActivity.this.getSupportFragmentManager(), "DatePick");
                         }
                     });
-                    formViews.add(tvDate);
-                    llRec.addView(tvDate);
-                    if (this.editMode) {
-                        if (!(this.edtRecord.get(fieldname) instanceof Boolean)) {
-                            tvDate.setText((String) this.edtRecord.get(fieldname));
+                    mFormViews.add(tvDate);
+                    mLlRecordframe.addView(tvDate);
+                    if (this.mEditMode) {
+                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
+                            tvDate.setText((String) this.mValuesToEdit.get(fieldname));
                         }
                     }
                     break;
                 case DATETIME:
-                    TextView tvDateTime = new TextView(this, null,
-                            android.R.attr.spinnerStyle);
+                    TextView tvDateTime = new TextView(this, null,android.R.attr.spinnerStyle);
                     tvDateTime.setTag(fieldname);
-
+                    tvDateTime.setId(STRVAL*1000 +fieldcount);
                     tvDateTime.setOnClickListener(new OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -202,11 +237,11 @@ public class FormActivity extends FragmentActivity implements
                             newFragment.show(FormActivity.this.getSupportFragmentManager(), "DateTimePick");
                         }
                     });
-                    formViews.add(tvDateTime);
-                    llRec.addView(tvDateTime);
-                    if (this.editMode) {
-                        if (!(this.edtRecord.get(fieldname) instanceof Boolean)) {
-                            tvDateTime.setText((String) this.edtRecord.get(fieldname));
+                    mFormViews.add(tvDateTime);
+                    mLlRecordframe.addView(tvDateTime);
+                    if (this.mEditMode) {
+                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
+                            tvDateTime.setText((String) this.mValuesToEdit.get(fieldname));
                         }
                     }
                     break;
@@ -214,7 +249,7 @@ public class FormActivity extends FragmentActivity implements
                     Button downloadBt = new Button(this);
                     downloadBt.setText(getString(R.string.sDownload));
                     downloadBt.setId(DOWNLOAD_BUTTON_ID);
-                    llRec.addView(downloadBt);
+                    mLlRecordframe.addView(downloadBt);
                     break;
                 case SELECTION:
                     break;
@@ -224,13 +259,14 @@ public class FormActivity extends FragmentActivity implements
                     LinkedList<IdString> manylist = new LinkedList<IdString>();
                     Spinner spinner = new Spinner(this);
                     spinner.setTag(fieldname);
+                    spinner.setId(INTVAL+fieldcount);
                     //Blank many2list option
                     IdString dummyIdStr = new IdString(-1, "");
                     manylist.add(dummyIdStr);
                     int pos = manylist.indexOf(dummyIdStr);
                     spinner.setSelection(pos); //Set as default
                     //--
-                    for (HashMap<String, Object> record : fgAsTaAM2.getList(fieldname)) {
+                    for (HashMap<String, Object> record : mFieldsGetTask.getList(fieldname)) {
                         manylist.add(new IdString((Integer) record.get("id"),
                                 (String) record.get("name")));
                     }
@@ -238,13 +274,13 @@ public class FormActivity extends FragmentActivity implements
                             this, android.R.layout.simple_spinner_dropdown_item,
                             manylist);
                     spinner.setAdapter(spinnerArrayAdapter);
-                    formViews.add(spinner);
-                    llRec.addView(spinner);
-                    if (this.editMode) {
-                        if (!(this.edtRecord.get(fieldname) instanceof Boolean)) {
-                            int edId = (Integer) ((Object[]) this.edtRecord
+                    mFormViews.add(spinner);
+                    mLlRecordframe.addView(spinner);
+                    if (this.mEditMode) {
+                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
+                            int edId = (Integer) ((Object[]) this.mValuesToEdit
                                     .get(fieldname))[0];
-                            String edStr =  ((Object[]) this.edtRecord
+                            String edStr =  ((Object[]) this.mValuesToEdit
                                     .get(fieldname))[1].toString();
                             IdString edIdStr = new IdString(edId, edStr);
                             pos = manylist.indexOf(edIdStr);
@@ -259,12 +295,13 @@ public class FormActivity extends FragmentActivity implements
                 case RELATED:
                     break;
                 // TODO Complete field types views
-
                 default:
                     break;
             }
         }
     }
+
+
 
     /*
      * @see android.view.View.OnClickListener#onClick(android.view.View)
@@ -275,47 +312,68 @@ public class FormActivity extends FragmentActivity implements
         Boolean goodInput = true;
 
         // Get input data into HashMap<String,Object>
-        // TODO check input data (required fields, bad input...)
-        if (v.getId() == this.btSave.getId()) {
-            for (View view : formViews) {
-                if (view instanceof EditText) {
-                    if (((EditText) view).getText().toString().length() == 0) {
-                        values.put((String) view.getTag(), false);
-                    } else {
-                        values.put((String) view.getTag(), ((EditText) view)
-                                .getText().toString());
-                    }
-                }
-                if (view instanceof Spinner) {
-                    Integer m2id = ((IdString) ((Spinner) view)
-                            .getSelectedItem()).getId();
-                    if (m2id == -1) {
-                        values.put((String) view.getTag(), false);
-                    } else {
-                        values.put((String) view.getTag(), m2id);
-                    }
+        // TODO check input data (required mFieldNames, bad input...)
+        if (v.getId() == this.mBSave.getId()) {
+            for (View view : mFormViews) {
+                String field = (String) view.getTag();
+                switch (view.getId()/1000){
+                    case BOOLVAL:
+                        Boolean checked = ((CheckBox)view).isChecked();
+                        mValues.put(field,checked);
+                        break;
+                    case INTVAL:
+                        if(view instanceof Spinner){
+                            Integer m2id = ((IdString) ((Spinner) view).getSelectedItem()).getId();
+                            if (m2id == -1) {
+                                mValues.put(field, false);
+                            } else {
+                                mValues.put(field, m2id);
+                            }
+                        }
+                        else{
+                            String intText = ((EditText) view).getText().toString();
+                            if (intText.length() == 0) {
+                                mValues.put(field, false);
+                            } else {
+                                mValues.put(field,Integer.valueOf(intText));
+                            }
+                        }
+                        break;
+                    case STRVAL:
+                        String strText = "";
+                        if(view instanceof  EditText){
+                            strText = ((EditText) view).getText().toString();
+                        }
+                        else{
+                            strText = ((TextView) view).getText().toString();
+                        }
+                        if (strText.length() == 0) {
+                            mValues.put(field, false);
+                        } else {
+                            mValues.put(field,strText);
+                        }
+                        break;
+                    case DOUBLEVAL:
+                        String doubleText = ((EditText) view).getText().toString();
+                        if (doubleText.length() == 0) {
+                            mValues.put(field, false);
+                        } else {
+                            mValues.put(field,Double.valueOf(doubleText));
+                        }
+                        break;
                 }
 
-                if (view instanceof TextView) {
-                    if (((TextView) view).getText().toString().length() == 0) {
-                        values.put((String) view.getTag(), false);
-                    } else {
-                        values.put((String) view.getTag(), ((TextView) view)
-                                .getText().toString());
-                    }
-                }
                 // TODO Complete view instance data retrieval
-
             }
 
             if (goodInput) {
-                if (editMode) {
-                    this.wrAsTa = new WriteAsyncTask(this);
-                    this.wrAsTa.execute(this.edtRecord, values);
+                if (mEditMode) {
+                    this.mWriteTask = new WriteAsyncTask(this);
+                    this.mWriteTask.execute(this.mValuesToEdit, mValues);
                 } else {
                     // Call AsyncTask to actually insert record
-                    this.crAsTa = new CreateAsyncTask(this);
-                    this.crAsTa.execute(values);
+                    this.mCreateTask = new CreateAsyncTask(this);
+                    this.mCreateTask.execute(mValues);
                 }
                 startTree();
                 finish();

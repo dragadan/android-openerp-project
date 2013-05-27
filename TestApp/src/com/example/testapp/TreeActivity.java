@@ -1,9 +1,5 @@
 package com.example.testapp;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -14,10 +10,13 @@ import android.support.v4.app.FragmentActivity;
 import android.view.*;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.*;
-
 import com.openerp.FieldsGetAsyncTask;
 import com.openerp.OpenErpHolder;
 import com.openerp.ReadAsyncTask;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 
 /*
  * TODO 
@@ -29,18 +28,17 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
         android.view.View.OnClickListener {
     private final static int SPACING_VERTICAL = 35;
     private final static int SPACING_HORIZONTAL = 10;
-    private ScrollView svRec;
-    private RelativeLayout rlRec;
-    private LinearLayout mainFrame;
-    private LinearLayout llTop;
-    private TableLayout tlRec;
-    private Button bCreate;
-    public List<HashMap<String, Object>> rData;
-    private String[] inFields;
-    private String modelName;
-    private FieldsGetAsyncTask fgAsTa;
-    private HashMap<String, Object> fieldsAttrs;
-    private TwoDScrollView tdScroll;
+    private RelativeLayout mRelativeLayoutRecord;
+    private LinearLayout mLinearLayoutMain;
+    private LinearLayout mLinearLayoutTop;
+    private TableLayout mTableLayout;
+    private Button mButtonCreate;
+    private List<HashMap<String, Object>> mValues;
+    private String[] mFieldNames;
+    private String mModelName;
+    private FieldsGetAsyncTask mFieldsGetAsyncTask;
+    private HashMap<String, Object> mFieldsAttrs;
+    private TwoDScrollView mTdScroll;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,16 +50,15 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
 
     private void startRead() {
         // TODO check if params are set and raise exception if not
-        // TODO parametrice infields or use view_fields_get from OpenERPConnect to choos fields
         String [] theFields = {"boolfield","intfield","floatfield","charfield","textfield","datefield","datetimefield","binfield","selfield","ftm2o","fto2m","ftm2m","funcfield"};
-        this.inFields = theFields;
-        this.modelName = "ftest";
+        this.mFieldNames = theFields;
+        this.mModelName = "ftest";
 
-        OpenErpHolder.modelName = this.modelName;
+        OpenErpHolder.modelName = this.mModelName;
 
         //Get field attributes (calls fieldsFetched when completed)
-        this.fgAsTa = new FieldsGetAsyncTask(this, this.inFields);
-        this.fgAsTa.execute(this.inFields);
+        this.mFieldsGetAsyncTask = new FieldsGetAsyncTask(this, this.mFieldNames);
+        this.mFieldsGetAsyncTask.execute(this.mFieldNames);
     }
     private void initializeLayout() {
 
@@ -74,38 +71,34 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
                 LayoutParams.WRAP_CONTENT);
 
         // Create layouts and apply params
-        this.mainFrame = new LinearLayout(this);
-        this.mainFrame.setOrientation(LinearLayout.VERTICAL);
+        this.mLinearLayoutMain = new LinearLayout(this);
+        this.mLinearLayoutMain.setOrientation(LinearLayout.VERTICAL);
 
-        this.bCreate = new Button(this);
-        this.bCreate.setText(R.string.sCreate);
-        this.bCreate.setOnClickListener(this);
+        this.mButtonCreate = new Button(this);
+        this.mButtonCreate.setText(R.string.sCreate);
+        this.mButtonCreate.setOnClickListener(this);
 
-        this.llTop = new LinearLayout(this);
-        this.llTop.setLayoutParams(llpWrap);
-        this.llTop.setPadding(SPACING_HORIZONTAL, SPACING_VERTICAL, 0, 0);
+        this.mLinearLayoutTop = new LinearLayout(this);
+        this.mLinearLayoutTop.setLayoutParams(llpWrap);
+        this.mLinearLayoutTop.setPadding(SPACING_HORIZONTAL, SPACING_VERTICAL, 0, 0);
 
-        //this.svRec = new ScrollView(this);
+        this.mRelativeLayoutRecord = new RelativeLayout(this);
+        this.mRelativeLayoutRecord.setLayoutParams(llpWrap);
+        this.mTdScroll = new TwoDScrollView(this);
 
-        this.rlRec = new RelativeLayout(this);
-        this.rlRec.setLayoutParams(llpWrap);
-        this.tdScroll = new TwoDScrollView(this);
+        this.mTdScroll.addView(mRelativeLayoutRecord);
 
-        this.tdScroll.addView(rlRec);
-
-
-        this.tlRec = new TableLayout(this);
-        this.tlRec.setLayoutParams(llpMatch);
-        this.tlRec.setPadding(SPACING_HORIZONTAL, SPACING_VERTICAL, 0, 0);
+        this.mTableLayout = new TableLayout(this);
+        this.mTableLayout.setLayoutParams(llpMatch);
+        this.mTableLayout.setPadding(SPACING_HORIZONTAL, SPACING_VERTICAL, 0, 0);
 
         // Define view structure
-        this.llTop.addView(bCreate);
-        //this.svRec.addView(rlRec);
-        this.mainFrame.addView(llTop);
-        this.mainFrame.addView(tdScroll);
+        this.mLinearLayoutTop.addView(mButtonCreate);
+        this.mLinearLayoutMain.addView(mLinearLayoutTop);
+        this.mLinearLayoutMain.addView(mTdScroll);
 
         // Set content view
-        setContentView(this.mainFrame, llpMatch);
+        setContentView(this.mLinearLayoutMain, llpMatch);
     }
 
 
@@ -134,24 +127,23 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
     @Override
     public void fieldsFetched(HashMap<String, Object> data) {
         //Save field attributes to local var
-        this.fieldsAttrs = data;
+        this.mFieldsAttrs = data;
         //Call read task to get record values (calls dataFetched when completed)
         ReadAsyncTask rAsTa = new ReadAsyncTask(this);
-        rAsTa.execute(inFields);
+        rAsTa.execute(mFieldNames);
     }
-
 
     // Retrieve and draw data on TableRow
     @Override
     public void dataFetched(String[] fields, List<HashMap<String, Object>> data) {
         // Save retrieved data to local attribute and convert to correct type
-        this.rData = data;
+        this.mValues = data;
         // Set table columns
         TableRow trHeader = new TableRow(this);
         TextView[] tvColField = new TextView[fields.length];
         for (int col = 0; col < fields.length; col++) {
             tvColField[col] = new TextView(this);
-            String headerText = (String) ((HashMap <String,Object>)this.fieldsAttrs.get(fields[col])).get("string");
+            String headerText = (String) ((HashMap <String,Object>)this.mFieldsAttrs.get(fields[col])).get("string");
             tvColField[col].setText(headerText);
             tvColField[col].setTypeface(Typeface.DEFAULT_BOLD);
             tvColField[col].setPadding(0, 0, SPACING_HORIZONTAL,
@@ -159,15 +151,15 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
             trHeader.addView(tvColField[col]);
         }
 
-        rlRec.addView(tlRec);
-        tlRec.addView(trHeader);
+        mRelativeLayoutRecord.addView(mTableLayout);
+        mTableLayout.addView(trHeader);
 
         // Draw record rows
         View[] vFields = new View[fields.length];
-        TableRowCustom[] tr = new TableRowCustom[this.rData.size()];
+        TableRowCustom[] tr = new TableRowCustom[this.mValues.size()];
         int row = 0;
         // For each record
-        for (HashMap<String, Object> obj : this.rData) {
+        for (HashMap<String, Object> obj : this.mValues) {
             // For each field
             tr[row] = new TableRowCustom(this);
             tr[row].setRowData(obj);
@@ -175,18 +167,17 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
                 View fieldRepr = getFieldReprView(fields[col],obj.get(fields[col]));
                 tr[row].addView(fieldRepr);
             }
-            tlRec.addView(tr[row], new TableLayout.LayoutParams(
+            mTableLayout.addView(tr[row], new TableLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT));
             row++;
         }
     }
 
-
-    // Return a view that contains field value
-    View getFieldReprView(String fieldname,Object obj){
+    // Return a view that contains field value.
+    public View getFieldReprView(String fieldname,Object obj){
         View fieldRepView = new View(this);
-        HashMap<String,Object> fAttr = (HashMap<String, Object>) this.fieldsAttrs.get(fieldname);
+        HashMap<String,Object> fAttr = (HashMap<String, Object>) this.mFieldsAttrs.get(fieldname);
         String ftype = ((String) fAttr.get("type")).toUpperCase(Locale.US);
         if(ftype.equals("BOOLEAN")){
             CheckBox cb = new CheckBox(this);
@@ -210,7 +201,7 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
                     case BINARY:
                         fieldRepView = new TextView(this);
                         char[] bytes = ((String)obj).toCharArray();
-                        ((TextView)fieldRepView).setText(String.valueOf(bytes.length) + " bytes");
+                        ((TextView)fieldRepView).setText(String.valueOf(Double.valueOf(bytes.length)/8) + " kb");
 
                         break;
                     case SELECTION:
@@ -231,7 +222,6 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
                         else {
                             ((TextView)fieldRepView).setText(selectionKey);
                         }
-
                         break;
                     case ONE2ONE:
                         break;
@@ -254,18 +244,16 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
             }
         }
 
-
         fieldRepView.setPadding(0, 0, SPACING_HORIZONTAL,SPACING_VERTICAL);
         return fieldRepView;
     }
 
-
     // Call loadForm(null) for create, with data to edit
     public void loadForm(HashMap<String, Object> recordDataToEdit){
         Intent i = new Intent(this, FormActivity.class);
-        i.putExtra("fields", this.inFields);
+        i.putExtra("mFieldNames", this.mFieldNames);
         if(recordDataToEdit != null){
-            i.putExtra("edtRecord", recordDataToEdit);
+            i.putExtra("mValuesToEdit", recordDataToEdit);
         }
         startActivity(i);
         this.finish();
@@ -274,13 +262,12 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
     // Button clicked
     @Override
     public void onClick(View v) {
-        if (v.getId() == this.bCreate.getId()) {
+        if (v.getId() == this.mButtonCreate.getId()) {
             loadForm(null);
         }
     }
 
     //When a row is clicked a new instance of a DialogFragment is created, set the row clicked data and call show()
-
     public void rowShortClicked(TableRow tr) {
         AlertDialogRowClic adrc = AlertDialogRowClic.newInstance(this);
         if(tr instanceof TableRowCustom){
@@ -288,7 +275,6 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
         }
         adrc.show(getSupportFragmentManager(), "Action");
     }
-
 
     /**
      * Exit the app if user select yes.
@@ -341,6 +327,88 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
         alertDialog.show();
     }
 
+    /**
+     * Returns the relative layout that will hold the TableLayout
+     * @return RelativeLayout
+     */
+    public RelativeLayout getmRelativeLayoutRecord() {
+        return mRelativeLayoutRecord;
+    }
 
+    /**
+     * Returns LinearLayout that contains all the views.
+     * @return LinearLayout
+     */
+    public LinearLayout getmLinearLayoutMain() {
+        return mLinearLayoutMain;
+    }
+
+    /**
+     * Returns LinearLayout that holds the action buttons on the top of the screen.
+     * @return LinearLayout
+     */
+    public LinearLayout getmLinearLayoutTop() {
+        return mLinearLayoutTop;
+    }
+
+    /**
+     * Returns the table that contains the TableRows withe the records
+     * @return TableLayout
+     */
+    public TableLayout getmTableLayout() {
+        return mTableLayout;
+    }
+
+    /**
+     * Returns the create button, this button should start FormActivity and end the current Activity
+     * @return Button
+     */
+    public Button getmButtonCreate() {
+        return mButtonCreate;
+    }
+
+    /**
+     * Returns a List that contains all the data retrieved
+     * It contains HashMap<String,Object> values, the string key is the field name
+     * and the Object is the data itself.
+     * @return List<HashMap<String, Object>>
+     */
+    public List<HashMap<String, Object>> getmValues() {
+        return mValues;
+    }
+
+    /**
+     * Returns a String array with the field names that will be retrieved.
+     * @return String[]
+     */
+    public String[] getmFieldNames() {
+        return mFieldNames;
+    }
+
+    /**
+     * Returns the target model name
+     * @return String
+     */
+    public String getmModelName() {
+        return mModelName;
+    }
+
+    /**
+     * Returns HashMap with field attributes, the string key is the field name and the Object contains
+     * the field attributes.
+     * EX:
+     * HMobject["One2ManyField"]:
+     * (String)"context"
+     * (String)"relation": "model"
+     * (Object[])"domain":
+     * (String)"type":"one2many"
+     * (Boolean)"selectable":"true"
+     * (String)"relation-field":"field"
+     * (String)"string":"O2M Field"
+     * @return HashMap<String, Object>
+     */
+    public HashMap<String, Object> getmFieldsAttrs() {
+        return mFieldsAttrs;
+    }
 
 }
