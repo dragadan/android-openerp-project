@@ -307,6 +307,14 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
         alertDialog.show();
     }
 
+    public void setmModelName(String mModelName) {
+        this.mModelName = mModelName;
+    }
+
+    public void setmFieldNames(String[] mFieldNames) {
+        this.mFieldNames = mFieldNames;
+    }
+
     private void doExit() {
 
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
