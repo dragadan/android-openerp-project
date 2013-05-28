@@ -15,6 +15,7 @@ import com.openerp.FieldsGetAndM2PopulateAT;
 import com.openerp.OpenErpHolder;
 import com.openerp.WriteAsyncTask;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -24,15 +25,17 @@ public class FormActivity extends FragmentActivity implements
         FieldsGetActivityInterface, OnClickListener {
     private final static int SPACING_VERTICAL = 25;
     private final static int SPACING_HORIZONTAL = 10;
-    private final static int DOWNLOAD_BUTTON_ID = 1210;
     private final static int INTVAL = 2; //For integer Fields
     private final static int STRVAL = 3; //For Char and Text Fields
     private final static int DOUBLEVAL = 4; //For Float fields
     private final static int BOOLVAL = 5; // For Boolean Fields
     private final static int OBJVAl = 6;
     private final static int OBJARRVAL = 7;
-    private final static int UPLOAD_BUTTON_ID = 1211;
-    private final static int CLEAR_BUTTON_ID = 1212;
+    private final static int DOWNLOAD_BUTTON_ID = 120;
+    private final static int UPLOAD_BUTTON_ID = 121;
+    private final static int CLEAR_BUTTON_ID = 122;
+    private final static int BINARY_FIELD_ID = 123;
+
     private ArrayList<View> mFormViews;
     private ScrollView mSvRecords;
     private LinearLayout mLlRecordframe;
@@ -65,9 +68,9 @@ public class FormActivity extends FragmentActivity implements
             if (extras.containsKey("mFieldNames")) {
                 this.mFieldNames = extras.getStringArray("mFieldNames");
             }
-            if (extras.containsKey("mValuesToEdit")) {
-                this.mValuesToEdit = (HashMap<String, Object>) extras
-                        .get("mValuesToEdit");
+
+            if (extras.containsKey("editRecordId")) {
+                this.mValuesToEdit = (HashMap<String, Object>) OpenErpHolder.getInstance().getmData().get(((Integer) extras.get("editRecordId")));
                 this.mEditMode = true;
             } else {
                 this.mEditMode = false;
@@ -246,10 +249,38 @@ public class FormActivity extends FragmentActivity implements
                     }
                     break;
                 case BINARY:
-                    Button downloadBt = new Button(this);
-                    downloadBt.setText(getString(R.string.sDownload));
-                    downloadBt.setId(DOWNLOAD_BUTTON_ID);
-                    mLlRecordframe.addView(downloadBt);
+                    Button btDownload = new Button(this);
+                    btDownload.setText(R.string.sDownload);
+                    btDownload.setId(DOWNLOAD_BUTTON_ID);
+                    Button btClear = new Button(this);
+                    btClear.setText(R.string.sClear);
+                    btClear.setId(CLEAR_BUTTON_ID);
+                    Button btUpload = new Button(this);
+                    btUpload.setText(R.string.sUpload);
+                    btUpload.setId(UPLOAD_BUTTON_ID);
+                    TextView tvBinSize = new TextView(this);
+                    tvBinSize.setMinimumWidth(100);
+                    TextView tvBinary = new TextView(this);
+
+                    if(this.mEditMode){
+                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)){
+                            byte[] bytes = ((String)this.mValuesToEdit.get(fieldname)).getBytes();
+                            tvBinary.setText(bytes.toString());
+                            tvBinSize.setText(readableFileSize(bytes.length));
+                        }
+                    }
+                    else{
+                        btDownload.setEnabled(false);
+                        btClear.setEnabled(false);
+                    }
+                    LinearLayout llBinary = new LinearLayout(this);
+                    llBinary.setOrientation(LinearLayout.HORIZONTAL);
+                    llBinary.addView(tvBinSize);
+                    llBinary.addView(btDownload);
+                    llBinary.addView(btUpload);
+                    llBinary.addView(btClear);
+
+                    mLlRecordframe.addView(llBinary);
                     break;
                 case SELECTION:
                     break;
@@ -302,6 +333,12 @@ public class FormActivity extends FragmentActivity implements
     }
 
 
+    public String readableFileSize(long size) {
+        if(size <= 0) return "0";
+        final String[] units = new String[] { "B", "KB", "MB", "GB", "TB" };
+        int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
+        return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
+    }
 
     /*
      * @see android.view.View.OnClickListener#onClick(android.view.View)
@@ -381,6 +418,7 @@ public class FormActivity extends FragmentActivity implements
         }
 
         if(v.getId() == DOWNLOAD_BUTTON_ID){
+            byte[] buffer = ((TextView)findViewById(BINARY_FIELD_ID)).getText().toString().getBytes();
 
         }
     }
@@ -409,7 +447,6 @@ public class FormActivity extends FragmentActivity implements
                     public void onClick(DialogInterface dialog, int which) {
                         FormActivity.this.startTree();
                         finish();
-
                     }
                 });
 

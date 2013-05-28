@@ -1,10 +1,11 @@
 package com.openerp;
 
-import java.util.HashMap;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import com.example.testapp.R;
+
+import java.util.HashMap;
 
 public class WriteAsyncTask extends
 		AsyncTask<HashMap<String, Object>, String, Boolean> {
@@ -31,7 +32,7 @@ public class WriteAsyncTask extends
 	}
 
 	private void loadConnection() {
-		this.oc = OpenErpHolder.oc;
+		this.oc = OpenErpHolder.getInstance().getmOConn();
 	}
 
 	/*
@@ -48,7 +49,7 @@ public class WriteAsyncTask extends
 		if(values[0].containsKey("id")){
 			Object oid = values[0].get("id");
 			Long lid = Long.valueOf(oid.toString());
-			writeOk = oc.write(OpenErpHolder.modelName, new Long[] {lid},values[1], null);
+			writeOk = oc.write(OpenErpHolder.getInstance().getmModelName(), new Long[] {lid},values[1], null);
 		}
 		return writeOk;
 

@@ -33,7 +33,7 @@ public class ConnectAsyncTask extends
 	}
 
 	private void loadConnection() {
-		this.oc = OpenErpHolder.oc;
+		this.oc = OpenErpHolder.getInstance().getmOConn();
 	}
 
 	@Override
@@ -59,7 +59,7 @@ public class ConnectAsyncTask extends
 		if (result != null) {
 			Log.d(this.getClass().getName(), "Connected");
 			Intent i = new Intent(activity, TreeActivity.class);
-			OpenErpHolder.oc = this.oc;
+			OpenErpHolder.getInstance().setmOConn(this.oc);
 			activity.startActivity(i);
 			activity.finish();
 		} else {

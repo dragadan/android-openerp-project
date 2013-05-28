@@ -19,6 +19,11 @@ package com.openerp;
  * 
  */
 
+import android.content.ContentValues;
+import android.util.Log;
+import com.xmlrpc.XMLRPCClient;
+import com.xmlrpc.XMLRPCException;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
@@ -26,12 +31,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import com.xmlrpc.XMLRPCClient;
-import com.xmlrpc.XMLRPCException;
-
-import android.content.ContentValues;
-import android.util.Log;
 
 /**
  * This class provides access to basic methods in OpenObject, so you can use
@@ -58,6 +57,8 @@ import android.util.Log;
  * </ul>
  * @authos Gabriel Stedman Bernal <gabriwinter@gmail.com>
  * */
+
+
 
 public class OpenErpConnect {
     

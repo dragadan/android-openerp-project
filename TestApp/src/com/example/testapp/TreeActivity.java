@@ -14,6 +14,7 @@ import com.openerp.FieldsGetAsyncTask;
 import com.openerp.OpenErpHolder;
 import com.openerp.ReadAsyncTask;
 
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -48,18 +49,6 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
 
     }
 
-    private void startRead() {
-        // TODO check if params are set and raise exception if not
-        String [] theFields = {"boolfield","intfield","floatfield","charfield","textfield","datefield","datetimefield","binfield","selfield","ftm2o","fto2m","ftm2m","funcfield"};
-        this.mFieldNames = theFields;
-        this.mModelName = "ftest";
-
-        OpenErpHolder.modelName = this.mModelName;
-
-        //Get field attributes (calls fieldsFetched when completed)
-        this.mFieldsGetAsyncTask = new FieldsGetAsyncTask(this, this.mFieldNames);
-        this.mFieldsGetAsyncTask.execute(this.mFieldNames);
-    }
     private void initializeLayout() {
 
         // Layout params definition
@@ -102,6 +91,18 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
     }
 
 
+    private void startRead() {
+        // TODO check if params are set and raise exception if not
+        String [] theFields = {"boolfield","intfield","floatfield","charfield","textfield","datefield","datetimefield","binfield","selfield","ftm2o","fto2m","ftm2m","funcfield"};
+        this.mFieldNames = theFields;
+        this.mModelName = "ftest";
+        OpenErpHolder.getInstance().setmModelName(this.mModelName);
+        //Get field attributes (calls fieldsFetched when completed)
+        this.mFieldsGetAsyncTask = new FieldsGetAsyncTask(this, this.mFieldNames);
+        this.mFieldsGetAsyncTask.execute(this.mFieldNames);
+    }
+
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -128,6 +129,7 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
     public void fieldsFetched(HashMap<String, Object> data) {
         //Save field attributes to local var
         this.mFieldsAttrs = data;
+        OpenErpHolder.getInstance().setmFieldsAttributes(mFieldsAttrs);
         //Call read task to get record values (calls dataFetched when completed)
         ReadAsyncTask rAsTa = new ReadAsyncTask(this);
         rAsTa.execute(mFieldNames);
@@ -138,6 +140,7 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
     public void dataFetched(String[] fields, List<HashMap<String, Object>> data) {
         // Save retrieved data to local attribute and convert to correct type
         this.mValues = data;
+        OpenErpHolder.getInstance().setmData(mValues);
         // Set table columns
         TableRow trHeader = new TableRow(this);
         TextView[] tvColField = new TextView[fields.length];
@@ -200,9 +203,8 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
                         break;
                     case BINARY:
                         fieldRepView = new TextView(this);
-                        char[] bytes = ((String)obj).toCharArray();
-                        ((TextView)fieldRepView).setText(String.valueOf(Double.valueOf(bytes.length)/8) + " kb");
-
+                        byte[] bytes = ((String)obj).getBytes();
+                        ((TextView)fieldRepView).setText(readableFileSize(bytes.length));
                         break;
                     case SELECTION:
                         fieldRepView = new TextView(this);
@@ -253,7 +255,7 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
         Intent i = new Intent(this, FormActivity.class);
         i.putExtra("mFieldNames", this.mFieldNames);
         if(recordDataToEdit != null){
-            i.putExtra("mValuesToEdit", recordDataToEdit);
+            i.putExtra("editRecordId",mValues.indexOf(recordDataToEdit));
         }
         startActivity(i);
         this.finish();
@@ -305,6 +307,13 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
         alertDialog.setMessage(getString(R.string.sLogout));
         alertDialog.setTitle("TestApp");
         alertDialog.show();
+    }
+
+    public String readableFileSize(long size) {
+        if(size <= 0) return "0";
+        final String[] units = new String[] { "B", "KB", "MB", "GB", "TB" };
+        int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
+        return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
 
     public void setmModelName(String mModelName) {

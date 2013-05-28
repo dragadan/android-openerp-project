@@ -1,12 +1,12 @@
 package com.openerp;
 
-import java.util.HashMap;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
-
 import com.example.testapp.FieldsGetActivityInterface;
 import com.example.testapp.R;
+
+import java.util.HashMap;
 
 public class FieldsGetAsyncTask extends AsyncTask<String, String, OpenErpConnect> {
 	public ProgressDialog dialog;
@@ -34,7 +34,7 @@ public class FieldsGetAsyncTask extends AsyncTask<String, String, OpenErpConnect
 	}
 
 	private void loadConnection() {
-		this.oc = OpenErpHolder.oc;
+		this.oc = OpenErpHolder.getInstance().getmOConn();
 	}
 
 	/*
@@ -43,7 +43,7 @@ public class FieldsGetAsyncTask extends AsyncTask<String, String, OpenErpConnect
 	@Override
 	protected OpenErpConnect doInBackground(String... params) {
 		loadConnection();
-		this.data = oc.fieldsGet(OpenErpHolder.modelName);
+		this.data = oc.fieldsGet(OpenErpHolder.getInstance().getmModelName());
 		return oc;
 	}
 

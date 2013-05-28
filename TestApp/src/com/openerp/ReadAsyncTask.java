@@ -1,14 +1,13 @@
 package com.openerp;
 
-import java.util.HashMap;
-import java.util.List;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
-
 import com.example.testapp.R;
 import com.example.testapp.ReadActivityInterface;
+
+import java.util.HashMap;
+import java.util.List;
 
 public class ReadAsyncTask extends AsyncTask<String, String, OpenErpConnect> {
 	public ProgressDialog dialog;
@@ -36,7 +35,7 @@ public class ReadAsyncTask extends AsyncTask<String, String, OpenErpConnect> {
 	}
 
 	private void loadConnection() {
-		this.oc = OpenErpHolder.oc;
+		this.oc = OpenErpHolder.getInstance().getmOConn();
 	}
 
 	/*
@@ -47,9 +46,9 @@ public class ReadAsyncTask extends AsyncTask<String, String, OpenErpConnect> {
 		loadConnection();
 		this.fields = new String[params.length];
 		System.arraycopy(params, 0, this.fields, 0, params.length);
-		this.ids = oc.search(OpenErpHolder.modelName, new Object[0]);
+		this.ids = oc.search(OpenErpHolder.getInstance().getmModelName(), new Object[0]);
 		if (this.ids != null) {
-			this.data = oc.read(OpenErpHolder.modelName, this.ids, this.fields);
+			this.data = oc.read(OpenErpHolder.getInstance().getmModelName(), this.ids, this.fields);
 		}
 		return oc;
 	}
