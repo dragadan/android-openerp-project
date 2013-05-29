@@ -40,6 +40,7 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
     private FieldsGetAsyncTask mFieldsGetAsyncTask;
     private HashMap<String, Object> mFieldsAttrs;
     private TwoDScrollView mTdScroll;
+    private TableRow mTrHeader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,13 +74,17 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
 
         this.mRelativeLayoutRecord = new RelativeLayout(this);
         this.mRelativeLayoutRecord.setLayoutParams(llpWrap);
-        this.mTdScroll = new TwoDScrollView(this);
 
+        this.mTdScroll = new TwoDScrollView(this);
         this.mTdScroll.addView(mRelativeLayoutRecord);
 
         this.mTableLayout = new TableLayout(this);
         this.mTableLayout.setLayoutParams(llpMatch);
         this.mTableLayout.setPadding(SPACING_HORIZONTAL, SPACING_VERTICAL, 0, 0);
+
+        mRelativeLayoutRecord.addView(mTableLayout);
+        mTrHeader = new TableRow(this);
+        mTableLayout.addView(mTrHeader);
 
         // Define view structure
         this.mLinearLayoutTop.addView(mButtonCreate);
@@ -142,7 +147,7 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
         this.mValues = data;
         OpenErpHolder.getInstance().setmData(mValues);
         // Set table columns
-        TableRow trHeader = new TableRow(this);
+
         TextView[] tvColField = new TextView[fields.length];
         for (int col = 0; col < fields.length; col++) {
             tvColField[col] = new TextView(this);
@@ -151,11 +156,10 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
             tvColField[col].setTypeface(Typeface.DEFAULT_BOLD);
             tvColField[col].setPadding(0, 0, SPACING_HORIZONTAL,
                     SPACING_VERTICAL);
-            trHeader.addView(tvColField[col]);
+            mTrHeader.addView(tvColField[col]);
         }
 
-        mRelativeLayoutRecord.addView(mTableLayout);
-        mTableLayout.addView(trHeader);
+
 
         // Draw record rows
         View[] vFields = new View[fields.length];
@@ -252,13 +256,13 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
 
     // Call loadForm(null) for create, with data to edit
     public void loadForm(HashMap<String, Object> recordDataToEdit){
-        Intent i = new Intent(this, FormActivity.class);
+        Intent i = new Intent(this, OpenErpHolder.getInstance().getmClassFormActivity());
         i.putExtra("mFieldNames", this.mFieldNames);
         if(recordDataToEdit != null){
             i.putExtra("editRecordId",mValues.indexOf(recordDataToEdit));
         }
-        startActivity(i);
-        this.finish();
+        startActivityForResult(i, 1);
+
     }
 
     // Button clicked
@@ -268,6 +272,20 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
             loadForm(null);
         }
     }
+
+    // Called when Tree shows again after the form is closed
+    protected void onActivityResult(int requestCode, int resultCode, Intent i) {
+
+        if (requestCode == 1) {
+            // Reload view if form has been saved
+            if(resultCode == RESULT_OK){
+
+            }
+            if (resultCode == RESULT_CANCELED) {
+                // Not needed to reload anything
+            }
+        }
+    }//onActivityResult
 
     //When a row is clicked a new instance of a DialogFragment is created, set the row clicked data and call show()
     public void rowShortClicked(TableRow tr) {

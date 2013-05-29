@@ -9,8 +9,5 @@ public class PrefsActivity extends PreferenceActivity {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.settings);
 	}
-	@Override
-	public void onBackPressed() {
-		super.onBackPressed();
-	}
+
 }

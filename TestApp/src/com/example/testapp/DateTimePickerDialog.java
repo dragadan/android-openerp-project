@@ -17,10 +17,6 @@ public class DateTimePickerDialog extends DialogFragment implements
 		OnDateSetListener, TimePickerDialog.OnTimeSetListener {
     private final Boolean mTimePick;
     private View mParentView;
-    private TimePickerDialog tp;
-    private int mYear;
-    private int mMonth;
-    private int mDay;
     private int mHour;
     private int mMinute;
     private Calendar mCal;
@@ -35,9 +31,9 @@ public class DateTimePickerDialog extends DialogFragment implements
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         // Use the current date as the default date in the picker
         final Calendar c = Calendar.getInstance();
-        mYear = c.get(Calendar.YEAR);
-        mMonth = c.get(Calendar.MONTH);
-        mDay = c.get(Calendar.DAY_OF_MONTH);
+        int mYear = c.get(Calendar.YEAR);
+        int mMonth = c.get(Calendar.MONTH);
+        int mDay = c.get(Calendar.DAY_OF_MONTH);
         mHour = c.get(Calendar.HOUR_OF_DAY);
         mMinute = c.get(Calendar.MINUTE);
 
@@ -51,7 +47,7 @@ public class DateTimePickerDialog extends DialogFragment implements
     	mCal = Calendar.getInstance();
     	mCal.set(year, month, day);
         if(mTimePick){
-            this.tp = new TimePickerDialog(getActivity(),this,mHour,mMinute,true);
+            TimePickerDialog tp = new TimePickerDialog(getActivity(), this, mHour, mMinute, true);
             tp.show();
         }
         else{

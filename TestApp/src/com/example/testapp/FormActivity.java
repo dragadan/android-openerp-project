@@ -2,14 +2,21 @@ package com.example.testapp;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.text.InputType;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.*;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.Spinner;
+import android.widget.TextView;
+
 import com.openerp.CreateAsyncTask;
 import com.openerp.FieldsGetAndM2PopulateAT;
 import com.openerp.OpenErpHolder;
@@ -22,15 +29,13 @@ import java.util.LinkedList;
 import java.util.Locale;
 
 public class FormActivity extends FragmentActivity implements
-        FieldsGetActivityInterface, OnClickListener {
+        FieldsGetActivityInterface, OnClickListener, DialogInterface.OnClickListener {
     private final static int SPACING_VERTICAL = 25;
     private final static int SPACING_HORIZONTAL = 10;
     private final static int INTVAL = 2; //For integer Fields
     private final static int STRVAL = 3; //For Char and Text Fields
     private final static int DOUBLEVAL = 4; //For Float fields
     private final static int BOOLVAL = 5; // For Boolean Fields
-    private final static int OBJVAl = 6;
-    private final static int OBJARRVAL = 7;
     private final static int DOWNLOAD_BUTTON_ID = 120;
     private final static int UPLOAD_BUTTON_ID = 121;
     private final static int CLEAR_BUTTON_ID = 122;
@@ -129,8 +134,7 @@ public class FormActivity extends FragmentActivity implements
      */
     private String getFieldType(String fieldname){
         HashMap<String,Object> fAttr = (HashMap<String, Object>) this.mFieldsAttributes.get(fieldname);
-        String ftype = ((String) fAttr.get("type")).toUpperCase(Locale.US);
-        return ftype;
+        return ((String) fAttr.get("type")).toUpperCase(Locale.US);
     }
 
     /*
@@ -212,14 +216,7 @@ public class FormActivity extends FragmentActivity implements
                     TextView tvDate = new TextView(this, null,android.R.attr.spinnerStyle);
                     tvDate.setTag(fieldname);
                     tvDate.setId(STRVAL*1000 +fieldcount);
-                    tvDate.setOnClickListener(new OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            // Create the fragment and show it as a dialog.
-                            DateTimePickerDialog newFragment = new DateTimePickerDialog(v,false);
-                            newFragment.show(FormActivity.this.getSupportFragmentManager(), "DatePick");
-                        }
-                    });
+                    tvDate.setOnClickListener(this);
                     mFormViews.add(tvDate);
                     mLlRecordframe.addView(tvDate);
                     if (this.mEditMode) {
@@ -232,14 +229,7 @@ public class FormActivity extends FragmentActivity implements
                     TextView tvDateTime = new TextView(this, null,android.R.attr.spinnerStyle);
                     tvDateTime.setTag(fieldname);
                     tvDateTime.setId(STRVAL*1000 +fieldcount);
-                    tvDateTime.setOnClickListener(new OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            // Create the fragment and show it as a dialog.
-                            DateTimePickerDialog newFragment = new DateTimePickerDialog(v, true);
-                            newFragment.show(FormActivity.this.getSupportFragmentManager(), "DateTimePick");
-                        }
-                    });
+                    tvDateTime.setOnClickListener(this);
                     mFormViews.add(tvDateTime);
                     mLlRecordframe.addView(tvDateTime);
                     if (this.mEditMode) {
@@ -261,17 +251,16 @@ public class FormActivity extends FragmentActivity implements
                     TextView tvBinSize = new TextView(this);
                     tvBinSize.setMinimumWidth(100);
                     TextView tvBinary = new TextView(this);
-
-                    if(this.mEditMode){
-                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)){
-                            byte[] bytes = ((String)this.mValuesToEdit.get(fieldname)).getBytes();
+                    btDownload.setEnabled(false);
+                    btClear.setEnabled(false);
+                    if(this.mEditMode) {
+                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
+                            byte[] bytes = ((String) this.mValuesToEdit.get(fieldname)).getBytes();
                             tvBinary.setText(bytes.toString());
                             tvBinSize.setText(readableFileSize(bytes.length));
+                            btDownload.setEnabled(true);
+                            btClear.setEnabled(true);
                         }
-                    }
-                    else{
-                        btDownload.setEnabled(false);
-                        btClear.setEnabled(false);
                     }
                     LinearLayout llBinary = new LinearLayout(this);
                     llBinary.setOrientation(LinearLayout.HORIZONTAL);
@@ -412,14 +401,28 @@ public class FormActivity extends FragmentActivity implements
                     this.mCreateTask = new CreateAsyncTask(this);
                     this.mCreateTask.execute(mValues);
                 }
-                startTree();
+                setResult(RESULT_OK);
                 finish();
             }
         }
 
         if(v.getId() == DOWNLOAD_BUTTON_ID){
             byte[] buffer = ((TextView)findViewById(BINARY_FIELD_ID)).getText().toString().getBytes();
+        }
 
+        // If TextView for DATE or DATETIME is clicked
+        if(v.getId()/1000 == STRVAL){
+            DateTimePickerDialog newFragment;
+            if(getFieldType((String) v.getTag()).equals("DATETIME")){
+                newFragment = new DateTimePickerDialog(v, true);
+                newFragment.show(getSupportFragmentManager(), "DateTimePick");
+            }
+            else{
+                if(getFieldType((String) v.getTag()).equals("DATE")){
+                    newFragment = new DateTimePickerDialog(v, false);
+                    newFragment.show(getSupportFragmentManager(), "DatePick");
+                }
+            }
         }
     }
 
@@ -431,30 +434,19 @@ public class FormActivity extends FragmentActivity implements
         goBackDiscard();
     }
 
-    private void startTree() {
-        Intent i = new Intent(getBaseContext(), TreeActivity.class);
-        startActivity(i);
-    }
-
     private void goBackDiscard() {
 
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-
-        alertDialog.setPositiveButton(R.string.sYes,
-                new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        FormActivity.this.startTree();
-                        finish();
-                    }
-                });
-
+        alertDialog.setPositiveButton(R.string.sYes, (DialogInterface.OnClickListener) this);
         alertDialog.setNegativeButton(getString(R.string.sNo), null);
-
         alertDialog.setMessage(getString(R.string.sDiscard));
         alertDialog.setTitle("TestApp");
         alertDialog.show();
     }
 
+    @Override
+    public void onClick(DialogInterface dialogInterface, int i) {
+        setResult(RESULT_CANCELED);
+        finish();
+    }
 }

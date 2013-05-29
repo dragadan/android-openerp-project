@@ -1,15 +1,12 @@
 package com.openerp;
 
-import com.example.testapp.R;
-import com.example.testapp.TreeActivity;
-
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.util.Log;
+
+import com.example.testapp.LoginActivityInterface;
+import com.example.testapp.R;
 
 public class ConnectAsyncTask extends
 		AsyncTask<String, Integer, OpenErpConnect> {
@@ -54,33 +51,16 @@ public class ConnectAsyncTask extends
 	// This is called when doInBackground() is finished
 	@Override
 	protected void onPostExecute(OpenErpConnect result) {
-		String failMsg = activity.getString(R.string.sCheckSettings);
+
 		super.onPostExecute(null);
 		if (result != null) {
 			Log.d(this.getClass().getName(), "Connected");
-			Intent i = new Intent(activity, TreeActivity.class);
 			OpenErpHolder.getInstance().setmOConn(this.oc);
-			activity.startActivity(i);
-			activity.finish();
+            ((LoginActivityInterface) activity).connectionResolved(true);
 		} else {
 			Log.d(this.getClass().getName(), "Failed connection");
-			//failMsg = activity.getString(R.string.sCheckLogin);
-			
+            ((LoginActivityInterface) activity).connectionResolved(false);
 
-			AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-			builder.setTitle(activity.getString(R.string.sFailTitle))
-					.setMessage(failMsg)
-					.setCancelable(false)
-					.setNegativeButton("OK",
-							new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,
-										int id) {
-									dialog.cancel();
-								}
-							});
-			AlertDialog alert = builder.create();
-			alert.show();
 		}
 		if (this.dialog.isShowing()) {
 			this.dialog.dismiss();

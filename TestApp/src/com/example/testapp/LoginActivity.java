@@ -17,9 +17,10 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.openerp.ConnectAsyncTask;
+import com.openerp.OpenErpHolder;
 
 
-public class LoginActivity extends Activity {
+public class LoginActivity extends Activity implements LoginActivityInterface {
 	private static final int RESULT_SETTINGS = 1;
 	public static final String PREFS_NAME = "MyPrefsFile";
 	public String serverHost;
@@ -33,6 +34,7 @@ public class LoginActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_login);
+        this.setActivities();
 		this.findViews();
 		this.loadPreferences();
 	}
@@ -90,7 +92,6 @@ public class LoginActivity extends Activity {
 
     private void viewSettings() {
 		Intent i = new Intent(this, PrefsActivity.class);
-
 		startActivityForResult(i, RESULT_SETTINGS);
 	}
 
@@ -171,4 +172,35 @@ public class LoginActivity extends Activity {
 		alertDialog.show();
 	}
 
+    @Override
+    public void connectionResolved(Boolean result) {
+        if(result){
+            Intent i = new Intent(this, OpenErpHolder.getInstance().getmClassTreeActivity());
+            startActivity(i);
+            finish();
+        }
+        else{
+            String failMsg = this.getString(R.string.sCheckSettings);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(this.getString(R.string.sFailTitle))
+                    .setMessage(failMsg)
+                    .setCancelable(false)
+                    .setNegativeButton("OK",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog,
+                                                    int id) {
+                                    dialog.cancel();
+                                }
+                            });
+            AlertDialog alert = builder.create();
+            alert.show();
+        }
+    }
+
+    @Override
+    public void setActivities() {
+        OpenErpHolder.getInstance().setmClassTreeActivity(TreeActivity.class);
+        OpenErpHolder.getInstance().setmClassFormActivity(FormActivity.class);
+    }
 }

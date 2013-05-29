@@ -13,6 +13,25 @@ public class OpenErpHolder {
 	private String mModelName;
     private List<HashMap<String,Object>> mData;
     private HashMap<String, Object> mFieldsAttributes;
+    private Class mClassTreeActivity;
+    private Class mClassFormActivity;
+
+    public Class getmClassTreeActivity() {
+        return mClassTreeActivity;
+    }
+
+    public void setmClassTreeActivity(Class mClassTreeActivity) {
+        this.mClassTreeActivity = mClassTreeActivity;
+    }
+
+    public Class getmClassFormActivity() {
+        return mClassFormActivity;
+    }
+
+    public void setmClassFormActivity(Class mClassFormActivity) {
+        this.mClassFormActivity = mClassFormActivity;
+    }
+
     public enum OoType {
         BOOLEAN, INTEGER, FLOAT, CHAR, TEXT, DATE, DATETIME, BINARY, SELECTION, ONE2ONE, MANY2ONE, ONE2MANY, MANY2MANY, RELATED,
     }
