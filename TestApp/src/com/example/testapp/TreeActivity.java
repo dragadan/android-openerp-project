@@ -7,14 +7,26 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.view.*;
+import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.*;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TableLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
+
 import com.openerp.FieldsGetAsyncTask;
 import com.openerp.OpenErpHolder;
 import com.openerp.ReadAsyncTask;
 
-import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -38,9 +50,10 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
     private String[] mFieldNames;
     private String mModelName;
     private FieldsGetAsyncTask mFieldsGetAsyncTask;
-    private HashMap<String, Object> mFieldsAttrs;
+    private HashMap<String, Object> mFieldsDescrip;
     private TwoDScrollView mTdScroll;
     private TableRow mTrHeader;
+    private boolean hasBinaryField;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +113,7 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
         // TODO check if params are set and raise exception if not
         String [] theFields = {"boolfield","intfield","floatfield","charfield","textfield","datefield","datetimefield","binfield","selfield","ftm2o","fto2m","ftm2m","funcfield"};
         this.mFieldNames = theFields;
+        OpenErpHolder.getInstance().setmFieldNames(Arrays.copyOf(this.mFieldNames,this.mFieldNames.length));
         this.mModelName = "ftest";
         OpenErpHolder.getInstance().setmModelName(this.mModelName);
         //Get field attributes (calls fieldsFetched when completed)
@@ -129,37 +143,49 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
         return true;
     }
 
-    // When task for getting field attributes
+    // When task for getting field attributes ends.
     @Override
     public void fieldsFetched(HashMap<String, Object> data) {
         //Save field attributes to local var
-        this.mFieldsAttrs = data;
-        OpenErpHolder.getInstance().setmFieldsAttributes(mFieldsAttrs);
-        //Call read task to get record values (calls dataFetched when completed)
+        this.mFieldsDescrip = data;
+        this.hasBinaryField = false;
+        OpenErpHolder.getInstance().setmFieldsDescrip(mFieldsDescrip);
+
+        //Check for binary fields and take them out to avoid fetching all the uploaded files.
+        for(String fname: this.mFieldNames){
+            HashMap<String,Object> fieldAttrs = (HashMap<String,Object>)this.mFieldsDescrip.get(fname);
+            if ( ((HashMap<String,Object>)fieldAttrs).get("type").equals("binary") ){
+                this.hasBinaryField = true;
+                int i,j;
+                for (i=j=0; j<this.mFieldNames.length;++j){
+                    if (!fname.equals(this.mFieldNames[j])) this.mFieldNames[i++] = this.mFieldNames[j];
+                }
+                this.mFieldNames = Arrays.copyOf(this.mFieldNames,i);
+            }
+        }
+        //Call read task to get record values.
         ReadAsyncTask rAsTa = new ReadAsyncTask(this);
         rAsTa.execute(mFieldNames);
     }
 
-    // Retrieve and draw data on TableRow
+    // Retrieve and draw data on TableRow, called when ReadAsyncTask ends.
     @Override
-    public void dataFetched(String[] fields, List<HashMap<String, Object>> data) {
+    public void dataFetched(String[] fields, List <HashMap<String, Object>> data) {
         // Save retrieved data to local attribute and convert to correct type
         this.mValues = data;
         OpenErpHolder.getInstance().setmData(mValues);
-        // Set table columns
 
+        // Set table columns
         TextView[] tvColField = new TextView[fields.length];
         for (int col = 0; col < fields.length; col++) {
             tvColField[col] = new TextView(this);
-            String headerText = (String) ((HashMap <String,Object>)this.mFieldsAttrs.get(fields[col])).get("string");
+            String headerText = (String) ((HashMap <String,Object>)this.mFieldsDescrip.get(fields[col])).get("string");
             tvColField[col].setText(headerText);
             tvColField[col].setTypeface(Typeface.DEFAULT_BOLD);
             tvColField[col].setPadding(0, 0, SPACING_HORIZONTAL,
                     SPACING_VERTICAL);
             mTrHeader.addView(tvColField[col]);
         }
-
-
 
         // Draw record rows
         View[] vFields = new View[fields.length];
@@ -181,10 +207,11 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
         }
     }
 
+
     // Return a view that contains field value.
     public View getFieldReprView(String fieldname,Object obj){
         View fieldRepView = new View(this);
-        HashMap<String,Object> fAttr = (HashMap<String, Object>) this.mFieldsAttrs.get(fieldname);
+        HashMap<String,Object> fAttr = (HashMap<String, Object>) this.mFieldsDescrip.get(fieldname);
         String ftype = ((String) fAttr.get("type")).toUpperCase(Locale.US);
         if(ftype.equals("BOOLEAN")){
             CheckBox cb = new CheckBox(this);
@@ -206,9 +233,7 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
                         ((TextView)fieldRepView).setText((String) (obj).toString());
                         break;
                     case BINARY:
-                        fieldRepView = new TextView(this);
-                        byte[] bytes = ((String)obj).getBytes();
-                        ((TextView)fieldRepView).setText(readableFileSize(bytes.length));
+                        //No action taken on tree view, binary fields shouldn't be loaded here.
                         break;
                     case SELECTION:
                         fieldRepView = new TextView(this);
@@ -257,7 +282,6 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
     // Call loadForm(null) for create, with data to edit
     public void loadForm(HashMap<String, Object> recordDataToEdit){
         Intent i = new Intent(this, OpenErpHolder.getInstance().getmClassFormActivity());
-        i.putExtra("mFieldNames", this.mFieldNames);
         if(recordDataToEdit != null){
             i.putExtra("editRecordId",mValues.indexOf(recordDataToEdit));
         }
@@ -327,12 +351,7 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
         alertDialog.show();
     }
 
-    public String readableFileSize(long size) {
-        if(size <= 0) return "0";
-        final String[] units = new String[] { "B", "KB", "MB", "GB", "TB" };
-        int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
-        return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
-    }
+
 
     public void setmModelName(String mModelName) {
         this.mModelName = mModelName;
@@ -443,7 +462,7 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
      * @return HashMap<String, Object>
      */
     public HashMap<String, Object> getmFieldsAttrs() {
-        return mFieldsAttrs;
+        return mFieldsDescrip;
     }
 
 }

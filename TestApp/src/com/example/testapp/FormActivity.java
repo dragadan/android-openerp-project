@@ -3,8 +3,10 @@ package com.example.testapp;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.app.FragmentActivity;
 import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
@@ -18,18 +20,21 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.openerp.CreateAsyncTask;
-import com.openerp.FieldsGetAndM2PopulateAT;
 import com.openerp.OpenErpHolder;
+import com.openerp.ReadExtraAsyncTask;
 import com.openerp.WriteAsyncTask;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 
 public class FormActivity extends FragmentActivity implements
-        FieldsGetActivityInterface, OnClickListener, DialogInterface.OnClickListener {
+        ReadExtrasActivityInterface, OnClickListener, DialogInterface.OnClickListener {
     private final static int SPACING_VERTICAL = 25;
     private final static int SPACING_HORIZONTAL = 10;
     private final static int INTVAL = 2; //For integer Fields
@@ -52,28 +57,24 @@ public class FormActivity extends FragmentActivity implements
     private HashMap<String, Object> mValuesToEdit;
     private CreateAsyncTask mCreateTask;
     private String[] mFieldNames;
-    private FieldsGetAndM2PopulateAT mFieldsGetTask;
+    private ReadExtraAsyncTask mReadExtraAsyncTask;
     private WriteAsyncTask mWriteTask;
     private HashMap<String, Object> mFieldsAttributes; //Fields OpenERP Attributes
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.inicializeVars();
-        this.inicializeLayout();
+        this.initializeVars();
+        this.initializeLayout();
 
     }
 
-    @SuppressWarnings("unchecked")
-    private void inicializeVars() {
+
+    private void initializeVars() {
         this.mValuesToEdit = null;
-        this.mFieldNames = null;
+        this.mFieldNames = OpenErpHolder.getInstance().getmFieldNames();
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            if (extras.containsKey("mFieldNames")) {
-                this.mFieldNames = extras.getStringArray("mFieldNames");
-            }
-
             if (extras.containsKey("editRecordId")) {
                 this.mValuesToEdit = (HashMap<String, Object>) OpenErpHolder.getInstance().getmData().get(((Integer) extras.get("editRecordId")));
                 this.mEditMode = true;
@@ -82,12 +83,12 @@ public class FormActivity extends FragmentActivity implements
             }
         }
         this.mValues = new HashMap<String, Object>();
-        this.mFieldsGetTask = new FieldsGetAndM2PopulateAT(this, this.mFieldNames);
-        this.mFieldsGetTask.execute(this.mFieldNames);
+        this.mReadExtraAsyncTask = new ReadExtraAsyncTask(this, this.mValuesToEdit);
+        this.mReadExtraAsyncTask.execute(this.mFieldNames);
 
     }
 
-    private void inicializeLayout() {
+    private void initializeLayout() {
 
         // Layout params definition
         LinearLayout.LayoutParams llpMatch = new LinearLayout.LayoutParams(
@@ -146,10 +147,10 @@ public class FormActivity extends FragmentActivity implements
      * .HashMap)
      */
     @Override
-    public void fieldsFetched(HashMap<String, Object> data) {
+    public void dataFetched(HashMap<String, List<HashMap<String, Object>>> many2DataLists, List<HashMap<String,Object>> listBinary){
         // Draws layout
         // The views arraylist holds the views to retrieve data on Save
-        this.mFieldsAttributes = data;
+        this.mFieldsAttributes = OpenErpHolder.getInstance().getmFieldsDescrip();
         mFormViews = new ArrayList<View>();
         int fieldcount = 0;
         for (String fieldname : this.mFieldNames) {
@@ -242,26 +243,29 @@ public class FormActivity extends FragmentActivity implements
                     Button btDownload = new Button(this);
                     btDownload.setText(R.string.sDownload);
                     btDownload.setId(DOWNLOAD_BUTTON_ID);
+                    btDownload.setOnClickListener(this);
                     Button btClear = new Button(this);
                     btClear.setText(R.string.sClear);
                     btClear.setId(CLEAR_BUTTON_ID);
+                    btClear.setOnClickListener(this);
                     Button btUpload = new Button(this);
                     btUpload.setText(R.string.sUpload);
                     btUpload.setId(UPLOAD_BUTTON_ID);
                     TextView tvBinSize = new TextView(this);
                     tvBinSize.setMinimumWidth(100);
-                    TextView tvBinary = new TextView(this);
                     btDownload.setEnabled(false);
                     btClear.setEnabled(false);
+                    //TODO uncomment and adapt to get info from listBinary
+                   /*
                     if(this.mEditMode) {
                         if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
                             byte[] bytes = ((String) this.mValuesToEdit.get(fieldname)).getBytes();
-                            tvBinary.setText(bytes.toString());
                             tvBinSize.setText(readableFileSize(bytes.length));
+                            btDownload.setTag((String)fieldname);
                             btDownload.setEnabled(true);
                             btClear.setEnabled(true);
                         }
-                    }
+                    }*/
                     LinearLayout llBinary = new LinearLayout(this);
                     llBinary.setOrientation(LinearLayout.HORIZONTAL);
                     llBinary.addView(tvBinSize);
@@ -286,7 +290,7 @@ public class FormActivity extends FragmentActivity implements
                     int pos = manylist.indexOf(dummyIdStr);
                     spinner.setSelection(pos); //Set as default
                     //--
-                    for (HashMap<String, Object> record : mFieldsGetTask.getList(fieldname)) {
+                    for (HashMap<String, Object> record : many2DataLists.get(fieldname)) {
                         manylist.add(new IdString((Integer) record.get("id"),
                                 (String) record.get("name")));
                     }
@@ -407,7 +411,25 @@ public class FormActivity extends FragmentActivity implements
         }
 
         if(v.getId() == DOWNLOAD_BUTTON_ID){
-            byte[] buffer = ((TextView)findViewById(BINARY_FIELD_ID)).getText().toString().getBytes();
+            byte[] buffer =((String) this.mValuesToEdit.get(v.getTag())).getBytes();
+            byte[] dec_buffer = Base64.decode(buffer);
+
+            //Write file to SD
+            String path = "/testpath/";
+            String fileName = "testname";
+
+            try {
+                File sdCard = Environment.getExternalStorageDirectory();
+                File dir = new File (sdCard.getAbsolutePath() + path);
+                dir.mkdirs();
+                FileOutputStream f = new FileOutputStream(new File(dir, fileName));
+                f.write(dec_buffer, 0, dec_buffer.length);
+                f.close();
+            } catch (Exception e) {
+                Log.d("Download", e.getMessage());
+            }
+
+
         }
 
         // If TextView for DATE or DATETIME is clicked

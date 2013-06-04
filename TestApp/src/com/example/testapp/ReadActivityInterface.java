@@ -5,5 +5,6 @@ import java.util.List;
 
 public interface ReadActivityInterface {
 
-	public void dataFetched(String[] fields, List<HashMap<String, Object>> data);			
+	public void dataFetched(String[] fields, List<HashMap<String, Object>> data);
+
 }

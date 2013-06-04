@@ -11,11 +11,19 @@ public class OpenErpHolder {
 
 	private OpenErpConnect mOConn;
 	private String mModelName;
+    private String[] mFieldNames;
     private List<HashMap<String,Object>> mData;
-    private HashMap<String, Object> mFieldsAttributes;
+    private HashMap<String, Object> mFieldsDescrip;
     private Class mClassTreeActivity;
     private Class mClassFormActivity;
 
+
+    protected OpenErpHolder(){
+    }
+
+    public static synchronized OpenErpHolder getInstance() {
+        return instance;
+    }
     public Class getmClassTreeActivity() {
         return mClassTreeActivity;
     }
@@ -36,17 +44,19 @@ public class OpenErpHolder {
         BOOLEAN, INTEGER, FLOAT, CHAR, TEXT, DATE, DATETIME, BINARY, SELECTION, ONE2ONE, MANY2ONE, ONE2MANY, MANY2MANY, RELATED,
     }
 
-    public HashMap<String, Object> getmFieldsAttributes() {
-        return mFieldsAttributes;
+    public HashMap<String, Object> getmFieldsDescrip() {
+        return mFieldsDescrip;
     }
 
-    protected OpenErpHolder(){
+    public String[] getmFieldNames() {
+        return mFieldNames;
     }
-    public static synchronized OpenErpHolder getInstance() {
-        return instance;
+
+    public void setmFieldNames(String[] fieldNames) {
+        mFieldNames = fieldNames;
     }
-    public void setmFieldsAttributes(HashMap<String, Object> mFieldsAttributes) {
-        this.mFieldsAttributes = mFieldsAttributes;
+    public void setmFieldsDescrip(HashMap<String, Object> mFieldsAttributes) {
+        this.mFieldsDescrip = mFieldsAttributes;
     }
 
     public List<HashMap<String, Object>> getmData() {
