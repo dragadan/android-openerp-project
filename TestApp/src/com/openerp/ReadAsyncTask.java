@@ -12,15 +12,16 @@ import java.util.List;
 public class ReadAsyncTask extends AsyncTask<String, String, OpenErpConnect> {
 	public ProgressDialog dialog;
 	private Activity activity;
-	private OpenErpConnect oc;
+    private OpenErpConnect oc;
 	private Long[] ids;
-	List<HashMap<String, Object>> data;
-	private String[] fields;
+
+    private List<HashMap<String, Object>> mData;
+	private String[] mFields;
 
 	public ReadAsyncTask(Activity act) {
 		this.activity = act;
 		this.ids = null;
-		this.data = null;
+		this.mData = null;
 	}
 
 	@Override
@@ -39,16 +40,16 @@ public class ReadAsyncTask extends AsyncTask<String, String, OpenErpConnect> {
 	}
 
 	/*
-	 * Reads field values from model params -> fields
+	 * Reads field values from model params -> mFields
 	 */
 	@Override
 	protected OpenErpConnect doInBackground(String... params) {
 		loadConnection();
-		this.fields = new String[params.length];
-		System.arraycopy(params, 0, this.fields, 0, params.length);
+		this.mFields = new String[params.length];
+		System.arraycopy(params, 0, this.mFields, 0, params.length);
 		this.ids = oc.search(OpenErpHolder.getInstance().getmModelName(), new Object[0]);
 		if (this.ids != null) {
-			this.data = oc.read(OpenErpHolder.getInstance().getmModelName(), this.ids, this.fields);
+			this.mData = oc.read(OpenErpHolder.getInstance().getmModelName(), this.ids, this.mFields);
 		}
 		return oc;
 	}
@@ -56,12 +57,21 @@ public class ReadAsyncTask extends AsyncTask<String, String, OpenErpConnect> {
 	@Override
 	protected void onPostExecute(OpenErpConnect result) {
 		// TODO Handle Read errors
-		if (this.data != null) {
-			((ReadActivityInterface) activity).dataFetched(fields, data);
+		if (this.mData != null) {
+			((ReadActivityInterface) activity).dataFetched();
 		}
 		if (dialog.isShowing()) {
 			dialog.dismiss();
 		}
 	}
+
+    public List<HashMap<String, Object>> getData() {
+        return mData;
+    }
+
+
+    public String[] getFields() {
+        return mFields;
+    }
 
 }

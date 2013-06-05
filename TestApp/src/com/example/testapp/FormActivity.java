@@ -30,11 +30,10 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Locale;
 
 public class FormActivity extends FragmentActivity implements
-        ReadExtrasActivityInterface, OnClickListener, DialogInterface.OnClickListener {
+        ReadActivityInterface, OnClickListener, DialogInterface.OnClickListener {
     private final static int SPACING_VERTICAL = 25;
     private final static int SPACING_HORIZONTAL = 10;
     private final static int INTVAL = 2; //For integer Fields
@@ -147,7 +146,7 @@ public class FormActivity extends FragmentActivity implements
      * .HashMap)
      */
     @Override
-    public void dataFetched(HashMap<String, List<HashMap<String, Object>>> many2DataLists, List<HashMap<String,Object>> listBinary){
+    public void dataFetched(){
         // Draws layout
         // The views arraylist holds the views to retrieve data on Save
         this.mFieldsAttributes = OpenErpHolder.getInstance().getmFieldsDescrip();
@@ -256,16 +255,18 @@ public class FormActivity extends FragmentActivity implements
                     btDownload.setEnabled(false);
                     btClear.setEnabled(false);
                     //TODO uncomment and adapt to get info from listBinary
-                   /*
+
                     if(this.mEditMode) {
-                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
-                            byte[] bytes = ((String) this.mValuesToEdit.get(fieldname)).getBytes();
+                        Object binfield = this.mReadExtraAsyncTask.getListBinary().get(0).get(fieldname);
+                        if (!(binfield instanceof Boolean)) {
+                            //TODO get right index
+                            byte[] bytes = (((String) binfield).getBytes());
                             tvBinSize.setText(readableFileSize(bytes.length));
                             btDownload.setTag((String)fieldname);
                             btDownload.setEnabled(true);
                             btClear.setEnabled(true);
                         }
-                    }*/
+                    }
                     LinearLayout llBinary = new LinearLayout(this);
                     llBinary.setOrientation(LinearLayout.HORIZONTAL);
                     llBinary.addView(tvBinSize);
@@ -290,7 +291,7 @@ public class FormActivity extends FragmentActivity implements
                     int pos = manylist.indexOf(dummyIdStr);
                     spinner.setSelection(pos); //Set as default
                     //--
-                    for (HashMap<String, Object> record : many2DataLists.get(fieldname)) {
+                    for (HashMap<String, Object> record : this.mReadExtraAsyncTask.getMany2DataLists().get(fieldname)) {
                         manylist.add(new IdString((Integer) record.get("id"),
                                 (String) record.get("name")));
                     }

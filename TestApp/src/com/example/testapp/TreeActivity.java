@@ -54,6 +54,7 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
     private TwoDScrollView mTdScroll;
     private TableRow mTrHeader;
     private boolean hasBinaryField;
+    private ReadAsyncTask mReadAsyncTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -164,16 +165,17 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
             }
         }
         //Call read task to get record values.
-        ReadAsyncTask rAsTa = new ReadAsyncTask(this);
-        rAsTa.execute(mFieldNames);
+        this.mReadAsyncTask = new ReadAsyncTask(this);
+        mReadAsyncTask.execute(mFieldNames);
     }
 
     // Retrieve and draw data on TableRow, called when ReadAsyncTask ends.
     @Override
-    public void dataFetched(String[] fields, List <HashMap<String, Object>> data) {
+    public void dataFetched() {
         // Save retrieved data to local attribute and convert to correct type
-        this.mValues = data;
+        this.mValues = this.mReadAsyncTask.getData();
         OpenErpHolder.getInstance().setmData(mValues);
+        String[] fields =  this.mReadAsyncTask.getFields();
 
         // Set table columns
         TextView[] tvColField = new TextView[fields.length];
