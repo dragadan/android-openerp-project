@@ -3,6 +3,7 @@ package com.example.testapp;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.content.ActivityNotFoundException;
 import android.support.v4.app.NotificationCompat;
 import android.app.PendingIntent;
 import android.content.DialogInterface;
@@ -27,6 +28,8 @@ import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+
+import com.ipaulpro.afilechooser.utils.FileUtils;
 import com.openerp.CreateAsyncTask;
 import com.openerp.OpenErpHolder;
 import com.openerp.ReadExtraAsyncTask;
@@ -53,6 +56,7 @@ public class FormActivity extends FragmentActivity implements
     private final static int UPLOAD_BUTTON_ID = 121;
     private final static int CLEAR_BUTTON_ID = 122;
     private final static int BINARY_FIELD_ID = 123;
+    private static final int REQUEST_CODE = 0;
 
     private ArrayList<View> mFormViews;
     private ScrollView mSvRecords;
@@ -250,6 +254,7 @@ public class FormActivity extends FragmentActivity implements
                     }
                     break;
                 case BINARY:
+                    //TODO implement more than one binary field (Only 1 id for each button defined)
                     Button btDownload = new Button(this);
                     btDownload.setText(R.string.sDownload);
                     btDownload.setId(DOWNLOAD_BUTTON_ID);
@@ -261,12 +266,13 @@ public class FormActivity extends FragmentActivity implements
                     Button btUpload = new Button(this);
                     btUpload.setText(R.string.sUpload);
                     btUpload.setId(UPLOAD_BUTTON_ID);
+                    btUpload.setOnClickListener(this);
                     TextView tvBinFieldShow = new TextView(this);
                     tvBinFieldShow.setMinimumWidth(100);
                     tvBinFieldShow.setMaxLines(2);
                     btDownload.setEnabled(false);
                     btClear.setEnabled(false);
-                    //TODO uncomment and adapt to get info from listBinary
+
 
                     if (this.mEditMode) {
                         Object binfield = this.mReadExtraAsyncTask.getListBinary().get(binfieldscount).get(fieldname);
@@ -428,6 +434,16 @@ public class FormActivity extends FragmentActivity implements
             }
         }
 
+        if(v.getId() == UPLOAD_BUTTON_ID){
+
+            Intent target = FileUtils.createGetContentIntent();
+            Intent intent = Intent.createChooser(target, "SELECT");
+            try {
+                startActivityForResult(intent, REQUEST_CODE);
+            } catch (ActivityNotFoundException e) {
+                // The reason for the existence of aFileChooser
+            }
+        }
         if (v.getId() == DOWNLOAD_BUTTON_ID) {
             byte[] buffer = ((byte[]) this.mValuesToEdit.get(v.getTag()));
             if (this.mValues.containsKey(v.getTag())) {
@@ -473,6 +489,21 @@ public class FormActivity extends FragmentActivity implements
                     newFragment.show(getSupportFragmentManager(), "DatePick");
                 }
             }
+        }
+
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE:
+                if (resultCode == RESULT_OK) {
+                    // The URI of the selected file
+                    final Uri uri = data.getData();
+                    // Create a File from this Uri
+                    File file = FileUtils.getFile(uri);
+                }
         }
     }
 
