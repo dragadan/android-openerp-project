@@ -1,15 +1,23 @@
 package com.example.testapp;
 
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.support.v4.app.NotificationCompat;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.NotificationCompat;
 import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
+import android.webkit.MimeTypeMap;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -31,6 +39,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Locale;
+
 
 public class FormActivity extends FragmentActivity implements
         ReadActivityInterface, OnClickListener, DialogInterface.OnClickListener {
@@ -129,11 +138,12 @@ public class FormActivity extends FragmentActivity implements
 
     /**
      * Get OpenERP Field Type in string
+     *
      * @param fieldname
      * @return field type
      */
-    private String getFieldType(String fieldname){
-        HashMap<String,Object> fAttr = (HashMap<String, Object>) this.mFieldsAttributes.get(fieldname);
+    private String getFieldType(String fieldname) {
+        HashMap<String, Object> fAttr = (HashMap<String, Object>) this.mFieldsAttributes.get(fieldname);
         return ((String) fAttr.get("type")).toUpperCase(Locale.US);
     }
 
@@ -146,16 +156,17 @@ public class FormActivity extends FragmentActivity implements
      * .HashMap)
      */
     @Override
-    public void dataFetched(){
+    public void dataFetched() {
         // Draws layout
         // The views arraylist holds the views to retrieve data on Save
         this.mFieldsAttributes = OpenErpHolder.getInstance().getmFieldsDescrip();
         mFormViews = new ArrayList<View>();
         int fieldcount = 0;
+        int binfieldscount = 0;
         for (String fieldname : this.mFieldNames) {
             fieldcount++;
             TextView tvLabel = new TextView(this);
-            String headerText = (String) ((HashMap <String,Object>)this.mFieldsAttributes.get(fieldname)).get("string");
+            String headerText = (String) ((HashMap<String, Object>) this.mFieldsAttributes.get(fieldname)).get("string");
             tvLabel.setText(headerText);
             tvLabel.setPadding(0, SPACING_VERTICAL, 0, 0);
             mLlRecordframe.addView(tvLabel);
@@ -166,8 +177,8 @@ public class FormActivity extends FragmentActivity implements
                     cb.setTag(fieldname);
                     mFormViews.add(cb);
                     mLlRecordframe.addView(cb);
-                    cb.setId(BOOLVAL*1000 + fieldcount);
-                    if(this.mEditMode){
+                    cb.setId(BOOLVAL * 1000 + fieldcount);
+                    if (this.mEditMode) {
                         Boolean checked = (Boolean) this.mValuesToEdit.get(fieldname);
                         cb.setChecked(checked);
                     }
@@ -177,10 +188,10 @@ public class FormActivity extends FragmentActivity implements
                     EditText etInt = new EditText(this);
                     etInt.setInputType(InputType.TYPE_CLASS_NUMBER);
                     etInt.setTag(fieldname);
-                    etInt.setId(INTVAL*1000 + fieldcount);
+                    etInt.setId(INTVAL * 1000 + fieldcount);
                     mFormViews.add(etInt);
                     mLlRecordframe.addView(etInt);
-                    if(this.mEditMode){
+                    if (this.mEditMode) {
                         if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
                             etInt.setText(this.mValuesToEdit.get(fieldname).toString());
                         }
@@ -190,10 +201,10 @@ public class FormActivity extends FragmentActivity implements
                     EditText etFloat = new EditText(this);
                     etFloat.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
                     etFloat.setTag(fieldname);
-                    etFloat.setId(DOUBLEVAL*1000 + fieldcount);
+                    etFloat.setId(DOUBLEVAL * 1000 + fieldcount);
                     mFormViews.add(etFloat);
                     mLlRecordframe.addView(etFloat);
-                    if(this.mEditMode){
+                    if (this.mEditMode) {
                         if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
                             etFloat.setText(this.mValuesToEdit.get(fieldname).toString());
                         }
@@ -203,7 +214,7 @@ public class FormActivity extends FragmentActivity implements
                 case TEXT:
                     EditText etStrfield = new EditText(this);
                     etStrfield.setTag(fieldname);
-                    etStrfield.setId(STRVAL*1000 + fieldcount);
+                    etStrfield.setId(STRVAL * 1000 + fieldcount);
                     mFormViews.add(etStrfield);
                     mLlRecordframe.addView(etStrfield);
                     if (this.mEditMode) {
@@ -213,9 +224,9 @@ public class FormActivity extends FragmentActivity implements
                     }
                     break;
                 case DATE:
-                    TextView tvDate = new TextView(this, null,android.R.attr.spinnerStyle);
+                    TextView tvDate = new TextView(this, null, android.R.attr.spinnerStyle);
                     tvDate.setTag(fieldname);
-                    tvDate.setId(STRVAL*1000 +fieldcount);
+                    tvDate.setId(STRVAL * 1000 + fieldcount);
                     tvDate.setOnClickListener(this);
                     mFormViews.add(tvDate);
                     mLlRecordframe.addView(tvDate);
@@ -226,9 +237,9 @@ public class FormActivity extends FragmentActivity implements
                     }
                     break;
                 case DATETIME:
-                    TextView tvDateTime = new TextView(this, null,android.R.attr.spinnerStyle);
+                    TextView tvDateTime = new TextView(this, null, android.R.attr.spinnerStyle);
                     tvDateTime.setTag(fieldname);
-                    tvDateTime.setId(STRVAL*1000 +fieldcount);
+                    tvDateTime.setId(STRVAL * 1000 + fieldcount);
                     tvDateTime.setOnClickListener(this);
                     mFormViews.add(tvDateTime);
                     mLlRecordframe.addView(tvDateTime);
@@ -250,26 +261,34 @@ public class FormActivity extends FragmentActivity implements
                     Button btUpload = new Button(this);
                     btUpload.setText(R.string.sUpload);
                     btUpload.setId(UPLOAD_BUTTON_ID);
-                    TextView tvBinSize = new TextView(this);
-                    tvBinSize.setMinimumWidth(100);
+                    TextView tvBinFieldShow = new TextView(this);
+                    tvBinFieldShow.setMinimumWidth(100);
+                    tvBinFieldShow.setMaxLines(2);
                     btDownload.setEnabled(false);
                     btClear.setEnabled(false);
                     //TODO uncomment and adapt to get info from listBinary
 
-                    if(this.mEditMode) {
-                        Object binfield = this.mReadExtraAsyncTask.getListBinary().get(0).get(fieldname);
+                    if (this.mEditMode) {
+                        Object binfield = this.mReadExtraAsyncTask.getListBinary().get(binfieldscount).get(fieldname);
+                        Object binname = this.mReadExtraAsyncTask.getListBinaryNames().get(binfieldscount++).get(fieldname + "_name");
                         if (!(binfield instanceof Boolean)) {
-                            //TODO get right index
                             byte[] bytes = (((String) binfield).getBytes());
-                            tvBinSize.setText(readableFileSize(bytes.length));
-                            btDownload.setTag((String)fieldname);
+                            this.mValuesToEdit.put(fieldname, bytes);
+                            String showText = readableFileSize(bytes.length);
+                            if (!(binname instanceof Boolean) && binname!=null) {
+                                binname = ((String) binname).replaceAll("[^a-zA-Z0-9-_\\.]", "_");
+                                showText = (String) binname + "\n" + showText;
+                                this.mValuesToEdit.put(fieldname + "_name", binname);
+                            }
+                            tvBinFieldShow.setText(showText);
+                            btDownload.setTag((String) fieldname);
                             btDownload.setEnabled(true);
                             btClear.setEnabled(true);
                         }
                     }
                     LinearLayout llBinary = new LinearLayout(this);
                     llBinary.setOrientation(LinearLayout.HORIZONTAL);
-                    llBinary.addView(tvBinSize);
+                    llBinary.addView(tvBinFieldShow);
                     llBinary.addView(btDownload);
                     llBinary.addView(btUpload);
                     llBinary.addView(btClear);
@@ -284,7 +303,7 @@ public class FormActivity extends FragmentActivity implements
                     LinkedList<IdString> manylist = new LinkedList<IdString>();
                     Spinner spinner = new Spinner(this);
                     spinner.setTag(fieldname);
-                    spinner.setId(INTVAL+fieldcount);
+                    spinner.setId(INTVAL + fieldcount);
                     //Blank many2list option
                     IdString dummyIdStr = new IdString(-1, "");
                     manylist.add(dummyIdStr);
@@ -305,7 +324,7 @@ public class FormActivity extends FragmentActivity implements
                         if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
                             int edId = (Integer) ((Object[]) this.mValuesToEdit
                                     .get(fieldname))[0];
-                            String edStr =  ((Object[]) this.mValuesToEdit
+                            String edStr = ((Object[]) this.mValuesToEdit
                                     .get(fieldname))[1].toString();
                             IdString edIdStr = new IdString(edId, edStr);
                             pos = manylist.indexOf(edIdStr);
@@ -328,10 +347,10 @@ public class FormActivity extends FragmentActivity implements
 
 
     public String readableFileSize(long size) {
-        if(size <= 0) return "0";
-        final String[] units = new String[] { "B", "KB", "MB", "GB", "TB" };
-        int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
-        return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
+        if (size <= 0) return "0";
+        final String[] units = new String[]{"B", "KB", "MB", "GB", "TB"};
+        int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
+        return new DecimalFormat("#,##0.#").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
 
     /*
@@ -347,41 +366,39 @@ public class FormActivity extends FragmentActivity implements
         if (v.getId() == this.mBSave.getId()) {
             for (View view : mFormViews) {
                 String field = (String) view.getTag();
-                switch (view.getId()/1000){
+                switch (view.getId() / 1000) {
                     case BOOLVAL:
-                        Boolean checked = ((CheckBox)view).isChecked();
-                        mValues.put(field,checked);
+                        Boolean checked = ((CheckBox) view).isChecked();
+                        mValues.put(field, checked);
                         break;
                     case INTVAL:
-                        if(view instanceof Spinner){
+                        if (view instanceof Spinner) {
                             Integer m2id = ((IdString) ((Spinner) view).getSelectedItem()).getId();
                             if (m2id == -1) {
                                 mValues.put(field, false);
                             } else {
                                 mValues.put(field, m2id);
                             }
-                        }
-                        else{
+                        } else {
                             String intText = ((EditText) view).getText().toString();
                             if (intText.length() == 0) {
                                 mValues.put(field, false);
                             } else {
-                                mValues.put(field,Integer.valueOf(intText));
+                                mValues.put(field, Integer.valueOf(intText));
                             }
                         }
                         break;
                     case STRVAL:
                         String strText = "";
-                        if(view instanceof  EditText){
+                        if (view instanceof EditText) {
                             strText = ((EditText) view).getText().toString();
-                        }
-                        else{
+                        } else {
                             strText = ((TextView) view).getText().toString();
                         }
                         if (strText.length() == 0) {
                             mValues.put(field, false);
                         } else {
-                            mValues.put(field,strText);
+                            mValues.put(field, strText);
                         }
                         break;
                     case DOUBLEVAL:
@@ -389,7 +406,7 @@ public class FormActivity extends FragmentActivity implements
                         if (doubleText.length() == 0) {
                             mValues.put(field, false);
                         } else {
-                            mValues.put(field,Double.valueOf(doubleText));
+                            mValues.put(field, Double.valueOf(doubleText));
                         }
                         break;
                 }
@@ -411,43 +428,79 @@ public class FormActivity extends FragmentActivity implements
             }
         }
 
-        if(v.getId() == DOWNLOAD_BUTTON_ID){
-            byte[] buffer =((String) this.mValuesToEdit.get(v.getTag())).getBytes();
+        if (v.getId() == DOWNLOAD_BUTTON_ID) {
+            byte[] buffer = ((byte[]) this.mValuesToEdit.get(v.getTag()));
+            if (this.mValues.containsKey(v.getTag())) {
+                buffer = ((byte[]) this.mValues.get(v.getTag()));
+            }
             byte[] dec_buffer = Base64.decode(buffer);
-
-            //Write file to SD
-            String path = "/testpath/";
-            String fileName = "testname";
+            String path = "/"+getString(getBaseContext().getApplicationInfo().labelRes)+"/";
+            String fileName = "openerp_file";
+            if (this.mValuesToEdit.containsKey(v.getTag() + "_name")) {
+                fileName = (String) this.mValuesToEdit.get(v.getTag() + "_name");
+            }
+            if (this.mValues.containsKey(v.getTag() + "_name")) {
+                fileName = (String) this.mValues.get(v.getTag() + "_name");
+            }
 
             try {
                 File sdCard = Environment.getExternalStorageDirectory();
-                File dir = new File (sdCard.getAbsolutePath() + path);
+                File dir = new File(sdCard.getAbsolutePath() + path);
                 dir.mkdirs();
-                FileOutputStream f = new FileOutputStream(new File(dir, fileName));
-                f.write(dec_buffer, 0, dec_buffer.length);
-                f.close();
+                File f = new File(dir,fileName);
+                FileOutputStream fout = new FileOutputStream(f);
+                fout.write(dec_buffer, 0, dec_buffer.length);
+                fout.close();
+
+                if(f.exists()){
+                    showNotification(f);
+                }
             } catch (Exception e) {
                 Log.d("Download", e.getMessage());
             }
 
-
         }
 
         // If TextView for DATE or DATETIME is clicked
-        if(v.getId()/1000 == STRVAL){
+        if (v.getId() / 1000 == STRVAL) {
             DateTimePickerDialog newFragment;
-            if(getFieldType((String) v.getTag()).equals("DATETIME")){
+            if (getFieldType((String) v.getTag()).equals("DATETIME")) {
                 newFragment = new DateTimePickerDialog(v, true);
                 newFragment.show(getSupportFragmentManager(), "DateTimePick");
-            }
-            else{
-                if(getFieldType((String) v.getTag()).equals("DATE")){
+            } else {
+                if (getFieldType((String) v.getTag()).equals("DATE")) {
                     newFragment = new DateTimePickerDialog(v, false);
                     newFragment.show(getSupportFragmentManager(), "DatePick");
                 }
             }
         }
     }
+
+    private void showNotification(File file) {
+
+        //Intent to open file
+        Intent intent = new Intent();
+        intent.setAction(android.content.Intent.ACTION_VIEW);
+
+        //Get file type
+        MimeTypeMap mime = MimeTypeMap.getSingleton();
+        String ext=file.getName().substring(file.getName().indexOf(".")+1);
+        String type = mime.getMimeTypeFromExtension(ext);
+        intent.setDataAndType(Uri.fromFile(file),type);
+        PendingIntent pIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        NotificationCompat.Builder noti =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(android.R.drawable.stat_sys_download_done)
+                        .setContentTitle(getString(R.string.sCompletedDownload))
+                        .setContentText(file.getName())
+                        .setContentIntent(pIntent);
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        // Hide the notification after its selected
+        notificationManager.notify(0,noti.build());
+        noti.build().flags |= Notification.FLAG_AUTO_CANCEL;
+    }
+
 
     /**
      * Return to TreeView on Back and dialog confirm

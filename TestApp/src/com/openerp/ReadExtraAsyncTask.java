@@ -12,29 +12,29 @@ import java.util.List;
 
 /**
  * Gets extra data needed for the FormView: many2_ lists, binary data and selection fields
- *
+ * <p/>
  * Populates binary fields
  */
 public class ReadExtraAsyncTask extends AsyncTask<String, String, OpenErpConnect> {
     private final Activity activity;
-    private final HashMap<String,Object> mRecord;
+    private final HashMap<String, Object> mRecord;
     public ProgressDialog dialog;
     private final OpenErpConnect oc;
     private HashMap<String, Object> fieldAttrs;
-	private HashMap<String, List<HashMap<String, Object>>> mMany2DataLists;
-    private List<HashMap<String,Object>> mListBinary;
-    private List<HashMap<String,Object>> mListBinaryNames;
-    private List<HashMap<String,Object>> mListSelection;
+    private HashMap<String, List<HashMap<String, Object>>> mMany2DataLists;
+    private List<HashMap<String, Object>> mListBinary;
+    private List<HashMap<String, Object>> mListBinaryNames;
+    private List<HashMap<String, Object>> mListSelection;
 
     public ReadExtraAsyncTask(Activity act, HashMap<String, Object> record) {
         mRecord = record;
         activity = act;
         fieldAttrs = OpenErpHolder.getInstance().getmFieldsDescrip();
-		mMany2DataLists = null;
+        mMany2DataLists = null;
         mListBinary = null;
         oc = OpenErpHolder.getInstance().getmOConn();
         this.mMany2DataLists = new HashMap<String, List<HashMap<String, Object>>>();
-	}
+    }
 
     @Override
     protected void onPreExecute() {
@@ -56,11 +56,11 @@ public class ReadExtraAsyncTask extends AsyncTask<String, String, OpenErpConnect
             if (type.equals("many2one") || type.equals("many2many")) {
                 this.populateMany2OneDataLists(fieldname);
             }
-            if (type.equals("binary")){
-                this.populateBinaryFields(ids,fieldname);
-                this.populateBinaryFieldNames(ids,fieldname);
+            if (type.equals("binary")) {
+                this.populateBinaryFields(ids, fieldname);
+                this.populateBinaryFieldNames(ids, fieldname);
             }
-            if (type.equals("selection")){
+            if (type.equals("selection")) {
                 this.populateSelectionFieldsLists(fieldname);
             }
         }
@@ -81,9 +81,9 @@ public class ReadExtraAsyncTask extends AsyncTask<String, String, OpenErpConnect
      * String key is the field name
      * value is a list of records
      */
-    private void populateMany2OneDataLists(String fieldname){
+    private void populateMany2OneDataLists(String fieldname) {
 
-        String[] retFields = { "id", "name" };
+        String[] retFields = {"id", "name"};
         String rel = getFieldRelation(fieldname);
         Long[] ids = this.oc.search(rel, new Object[0]); //Get all names from other model.
         if (ids != null) {
@@ -94,37 +94,40 @@ public class ReadExtraAsyncTask extends AsyncTask<String, String, OpenErpConnect
     }
 
     private void populateBinaryFields(Long[] ids, String fieldname) {
-        mListBinary = this.oc.read(OpenErpHolder.getInstance().getmModelName(),ids,new String[] {fieldname});
+        mListBinary = this.oc.read(OpenErpHolder.getInstance().getmModelName(), ids, new String[]{fieldname});
     }
+
     //Recives binary field name: must search for filename attribute in field description.
+    //Expects that field name to be: "binaryfieldname_name"
     private void populateBinaryFieldNames(Long[] ids, String fieldname) {
-        mListBinaryNames = this.oc.read(OpenErpHolder.getInstance().getmModelName(),ids,new String[] {fieldname});
+        mListBinaryNames = this.oc.read(OpenErpHolder.getInstance().getmModelName(), ids, new String[]{fieldname + "_name"});
     }
+
     private void populateSelectionFieldsLists(String fieldname) {
         //TODO retrieve possible selections.
     }
 
 
     private String getFieldRelation(String fieldname) {
-		String relation = null;
-		if (this.fieldAttrs != null) {
-			HashMap<String, Object> fieldAttr = (HashMap<String, Object>) fieldAttrs
-					.get(fieldname);
-			relation = (String) fieldAttr.get("relation");
-		}
-		return relation;
-	}
+        String relation = null;
+        if (this.fieldAttrs != null) {
+            HashMap<String, Object> fieldAttr = (HashMap<String, Object>) fieldAttrs
+                    .get(fieldname);
+            relation = (String) fieldAttr.get("relation");
+        }
+        return relation;
+    }
 
 
-	private String getFieldType(String fieldname) {
-		String type = null;
-		if (this.fieldAttrs != null) {
-			HashMap<String, Object> fieldAttr = (HashMap<String, Object>) fieldAttrs
-					.get(fieldname);
-			type = (String) fieldAttr.get("type");
-		}
-		return type;
-	}
+    private String getFieldType(String fieldname) {
+        String type = null;
+        if (this.fieldAttrs != null) {
+            HashMap<String, Object> fieldAttr = (HashMap<String, Object>) fieldAttrs
+                    .get(fieldname);
+            type = (String) fieldAttr.get("type");
+        }
+        return type;
+    }
 
 
     public List<HashMap<String, Object>> getListSelection() {
@@ -142,11 +145,6 @@ public class ReadExtraAsyncTask extends AsyncTask<String, String, OpenErpConnect
     public List<HashMap<String, Object>> getListBinary() {
         return mListBinary;
     }
-
-
-
-
-
 
 
 }

@@ -29,6 +29,7 @@
     <string name="sEdit">Edit</string>
     <string name="sRecords">Records</string>
     <string name="sDownload">Download</string>
+    <string name="sCompletedDownload">Download complete</string>
     <string name="sClear">Clear</string>
     <string name="sUpload">Upload</string>
     <string name="sFormTitle">Form</string>
