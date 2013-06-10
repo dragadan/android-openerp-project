@@ -303,9 +303,10 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
     protected void onActivityResult(int requestCode, int resultCode, Intent i) {
 
         if (requestCode == 1) {
-            // Reload view if form has been saved
+            // Reload activity if form has been saved
             if(resultCode == RESULT_OK){
-
+                finish();
+                startActivity(getIntent());
             }
             if (resultCode == RESULT_CANCELED) {
                 // Not needed to reload anything

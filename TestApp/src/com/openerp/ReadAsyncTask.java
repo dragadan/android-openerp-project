@@ -35,16 +35,12 @@ public class ReadAsyncTask extends AsyncTask<String, String, OpenErpConnect> {
 		dialog.show();
 	}
 
-	private void loadConnection() {
-		this.oc = OpenErpHolder.getInstance().getmOConn();
-	}
-
 	/*
 	 * Reads field values from model params -> mFields
 	 */
 	@Override
 	protected OpenErpConnect doInBackground(String... params) {
-		loadConnection();
+        this.oc = OpenErpHolder.getInstance().getmOConn();
 		this.mFields = new String[params.length];
 		System.arraycopy(params, 0, this.mFields, 0, params.length);
 		this.ids = oc.search(OpenErpHolder.getInstance().getmModelName(), new Object[0]);

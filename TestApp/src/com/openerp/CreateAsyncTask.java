@@ -50,7 +50,8 @@ public class CreateAsyncTask extends AsyncTask<HashMap<String, Object>, String, 
 	@Override
 	protected void onPostExecute(Long result) {
 		if(result != null){
-			Log.d("RES",String.valueOf(result));
+            activity.setResult(activity.RESULT_OK);
+            activity.finish();
 		}
 		else{
 			

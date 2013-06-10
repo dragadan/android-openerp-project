@@ -58,7 +58,8 @@ public class WriteAsyncTask extends
 	@Override
 	protected void onPostExecute(Boolean result) {
 		if (result) {
-
+            activity.setResult(activity.RESULT_OK);
+            activity.finish();
 		} else {
 
 		}

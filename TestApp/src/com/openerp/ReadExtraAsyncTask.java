@@ -49,21 +49,25 @@ public class ReadExtraAsyncTask extends AsyncTask<String, String, OpenErpConnect
 
     @Override
     protected OpenErpConnect doInBackground(String... params) {
+
         Long[] ids = new Long[1];
         for (String fieldname : OpenErpHolder.getInstance().getmFieldNames()) {
             String type = getFieldType(fieldname);
-            ids[0] = Long.valueOf((Integer) mRecord.get("id"));
             if (type.equals("many2one") || type.equals("many2many")) {
                 this.populateMany2OneDataLists(fieldname);
             }
-            if (type.equals("binary")) {
-                this.populateBinaryFields(ids, fieldname);
-                this.populateBinaryFieldNames(ids, fieldname);
-            }
-            if (type.equals("selection")) {
-                this.populateSelectionFieldsLists(fieldname);
+            if (this.mRecord != null){
+                ids[0] = Long.valueOf((Integer) mRecord.get("id"));
+                if (type.equals("binary")) {
+                    this.populateBinaryFields(ids, fieldname);
+                    this.populateBinaryFieldNames(ids, fieldname);
+                }
+                if (type.equals("selection")) {
+                    this.populateSelectionFieldsLists(fieldname);
+                }
             }
         }
+
         return this.oc;
     }
 

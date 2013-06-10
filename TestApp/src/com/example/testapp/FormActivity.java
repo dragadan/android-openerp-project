@@ -29,14 +29,19 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 
-import com.ipaulpro.afilechooser.utils.FileUtils;
+
 import com.openerp.CreateAsyncTask;
 import com.openerp.OpenErpHolder;
+import com.openerp.ReadAsyncTask;
 import com.openerp.ReadExtraAsyncTask;
 import com.openerp.WriteAsyncTask;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,6 +77,7 @@ public class FormActivity extends FragmentActivity implements
     private ReadExtraAsyncTask mReadExtraAsyncTask;
     private WriteAsyncTask mWriteTask;
     private HashMap<String, Object> mFieldsAttributes; //Fields OpenERP Attributes
+    private ReadAsyncTask mReadAsyncTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +92,7 @@ public class FormActivity extends FragmentActivity implements
         this.mValuesToEdit = null;
         this.mFieldNames = OpenErpHolder.getInstance().getmFieldNames();
         Bundle extras = getIntent().getExtras();
+        this.mValues = new HashMap<String, Object>();
         if (extras != null) {
             if (extras.containsKey("editRecordId")) {
                 this.mValuesToEdit = (HashMap<String, Object>) OpenErpHolder.getInstance().getmData().get(((Integer) extras.get("editRecordId")));
@@ -93,11 +100,10 @@ public class FormActivity extends FragmentActivity implements
             } else {
                 this.mEditMode = false;
             }
-        }
-        this.mValues = new HashMap<String, Object>();
-        this.mReadExtraAsyncTask = new ReadExtraAsyncTask(this, this.mValuesToEdit);
-        this.mReadExtraAsyncTask.execute(this.mFieldNames);
 
+        }
+        this.mReadExtraAsyncTask = new ReadExtraAsyncTask(this, this.mValuesToEdit);
+        this.mReadExtraAsyncTask.execute(null);
     }
 
     private void initializeLayout() {
@@ -429,20 +435,13 @@ public class FormActivity extends FragmentActivity implements
                     this.mCreateTask = new CreateAsyncTask(this);
                     this.mCreateTask.execute(mValues);
                 }
-                setResult(RESULT_OK);
-                finish();
+
             }
         }
 
         if(v.getId() == UPLOAD_BUTTON_ID){
 
-            Intent target = FileUtils.createGetContentIntent();
-            Intent intent = Intent.createChooser(target, "SELECT");
-            try {
-                startActivityForResult(intent, REQUEST_CODE);
-            } catch (ActivityNotFoundException e) {
-                // The reason for the existence of aFileChooser
-            }
+
         }
         if (v.getId() == DOWNLOAD_BUTTON_ID) {
             byte[] buffer = ((byte[]) this.mValuesToEdit.get(v.getTag()));
@@ -494,18 +493,7 @@ public class FormActivity extends FragmentActivity implements
 
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case REQUEST_CODE:
-                if (resultCode == RESULT_OK) {
-                    // The URI of the selected file
-                    final Uri uri = data.getData();
-                    // Create a File from this Uri
-                    File file = FileUtils.getFile(uri);
-                }
-        }
-    }
+
 
     private void showNotification(File file) {
 

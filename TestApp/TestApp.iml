@@ -22,15 +22,6 @@
     <orderEntry type="jdk" jdkName="Android 4.2.2" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="android-support-v4" level="project" />
-    <orderEntry type="module-library" exported="" scope="PROVIDED">
-      <library name="aFileChooser">
-        <CLASSES>
-          <root url="file://$USER_HOME$/Descargas/aFileChooser-master/out/production/aFileChooser" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
   </component>
 </module>
 
