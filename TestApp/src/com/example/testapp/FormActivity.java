@@ -57,10 +57,10 @@ public class FormActivity extends FragmentActivity implements
     private final static int STRVAL = 3; //For Char and Text Fields
     private final static int DOUBLEVAL = 4; //For Float fields
     private final static int BOOLVAL = 5; // For Boolean Fields
-    private final static int DOWNLOAD_BUTTON_ID = 120;
-    private final static int UPLOAD_BUTTON_ID = 121;
-    private final static int CLEAR_BUTTON_ID = 122;
-    private final static int BINARY_FIELD_ID = 123;
+    private final static int DOWNLOAD_BUTTON_ID = 6;
+    private final static int UPLOAD_BUTTON_ID = 7;
+    private final static int CLEAR_BUTTON_ID = 8;
+    private final static int BINARY_FIELD_ID = 9;
     private static final int REQUEST_CODE = 0;
 
     private ArrayList<View> mFormViews;
@@ -181,179 +181,214 @@ public class FormActivity extends FragmentActivity implements
             tvLabel.setPadding(0, SPACING_VERTICAL, 0, 0);
             mLlRecordframe.addView(tvLabel);
             String ftype = getFieldType(fieldname);
-            switch (OpenErpHolder.OoType.valueOf(ftype)) {
-                case BOOLEAN:
-                    CheckBox cb = new CheckBox(this);
-                    cb.setTag(fieldname);
-                    mFormViews.add(cb);
-                    mLlRecordframe.addView(cb);
-                    cb.setId(BOOLVAL * 1000 + fieldcount);
-                    if (this.mEditMode) {
-                        Boolean checked = (Boolean) this.mValuesToEdit.get(fieldname);
-                        cb.setChecked(checked);
-                    }
-                    cb.setClickable(true);
-                    break;
-                case INTEGER:
-                    EditText etInt = new EditText(this);
-                    etInt.setInputType(InputType.TYPE_CLASS_NUMBER);
-                    etInt.setTag(fieldname);
-                    etInt.setId(INTVAL * 1000 + fieldcount);
-                    mFormViews.add(etInt);
-                    mLlRecordframe.addView(etInt);
-                    if (this.mEditMode) {
-                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
-                            etInt.setText(this.mValuesToEdit.get(fieldname).toString());
+            //Not a function field
+            if( !((HashMap<String,Object>)this.mFieldsAttributes.get(fieldname)).containsKey("function"))
+                switch (OpenErpHolder.OoType.valueOf(ftype)) {
+                    case BOOLEAN:
+                        CheckBox cb = new CheckBox(this);
+                        cb.setTag(fieldname);
+                        mFormViews.add(cb);
+                        mLlRecordframe.addView(cb);
+                        cb.setId(BOOLVAL * 1000 + fieldcount);
+                        if (this.mEditMode) {
+                            Boolean checked = (Boolean) this.mValuesToEdit.get(fieldname);
+                            cb.setChecked(checked);
                         }
-                    }
-                    break;
-                case FLOAT:
-                    EditText etFloat = new EditText(this);
-                    etFloat.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-                    etFloat.setTag(fieldname);
-                    etFloat.setId(DOUBLEVAL * 1000 + fieldcount);
-                    mFormViews.add(etFloat);
-                    mLlRecordframe.addView(etFloat);
-                    if (this.mEditMode) {
-                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
-                            etFloat.setText(this.mValuesToEdit.get(fieldname).toString());
-                        }
-                    }
-                    break;
-                case CHAR:
-                case TEXT:
-                    EditText etStrfield = new EditText(this);
-                    etStrfield.setTag(fieldname);
-                    etStrfield.setId(STRVAL * 1000 + fieldcount);
-                    mFormViews.add(etStrfield);
-                    mLlRecordframe.addView(etStrfield);
-                    if (this.mEditMode) {
-                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
-                            etStrfield.setText((String) this.mValuesToEdit.get(fieldname));
-                        }
-                    }
-                    break;
-                case DATE:
-                    TextView tvDate = new TextView(this, null, android.R.attr.spinnerStyle);
-                    tvDate.setTag(fieldname);
-                    tvDate.setId(STRVAL * 1000 + fieldcount);
-                    tvDate.setOnClickListener(this);
-                    mFormViews.add(tvDate);
-                    mLlRecordframe.addView(tvDate);
-                    if (this.mEditMode) {
-                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
-                            tvDate.setText((String) this.mValuesToEdit.get(fieldname));
-                        }
-                    }
-                    break;
-                case DATETIME:
-                    TextView tvDateTime = new TextView(this, null, android.R.attr.spinnerStyle);
-                    tvDateTime.setTag(fieldname);
-                    tvDateTime.setId(STRVAL * 1000 + fieldcount);
-                    tvDateTime.setOnClickListener(this);
-                    mFormViews.add(tvDateTime);
-                    mLlRecordframe.addView(tvDateTime);
-                    if (this.mEditMode) {
-                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
-                            tvDateTime.setText((String) this.mValuesToEdit.get(fieldname));
-                        }
-                    }
-                    break;
-                case BINARY:
-                    //TODO implement more than one binary field (Only 1 id for each button defined)
-                    Button btDownload = new Button(this);
-                    btDownload.setText(R.string.sDownload);
-                    btDownload.setId(DOWNLOAD_BUTTON_ID);
-                    btDownload.setOnClickListener(this);
-                    Button btClear = new Button(this);
-                    btClear.setText(R.string.sClear);
-                    btClear.setId(CLEAR_BUTTON_ID);
-                    btClear.setOnClickListener(this);
-                    Button btUpload = new Button(this);
-                    btUpload.setText(R.string.sUpload);
-                    btUpload.setId(UPLOAD_BUTTON_ID);
-                    btUpload.setOnClickListener(this);
-                    TextView tvBinFieldShow = new TextView(this);
-                    tvBinFieldShow.setMinimumWidth(100);
-                    tvBinFieldShow.setMaxLines(2);
-                    btDownload.setEnabled(false);
-                    btClear.setEnabled(false);
-
-
-                    if (this.mEditMode) {
-                        Object binfield = this.mReadExtraAsyncTask.getListBinary().get(binfieldscount).get(fieldname);
-                        Object binname = this.mReadExtraAsyncTask.getListBinaryNames().get(binfieldscount++).get(fieldname + "_name");
-                        if (!(binfield instanceof Boolean)) {
-                            byte[] bytes = (((String) binfield).getBytes());
-                            this.mValuesToEdit.put(fieldname, bytes);
-                            String showText = readableFileSize(bytes.length);
-                            if (!(binname instanceof Boolean) && binname!=null) {
-                                binname = ((String) binname).replaceAll("[^a-zA-Z0-9-_\\.]", "_");
-                                showText = (String) binname + "\n" + showText;
-                                this.mValuesToEdit.put(fieldname + "_name", binname);
+                        cb.setClickable(true);
+                        break;
+                    case INTEGER:
+                        EditText etInt = new EditText(this);
+                        etInt.setInputType(InputType.TYPE_CLASS_NUMBER);
+                        etInt.setTag(fieldname);
+                        etInt.setId(INTVAL * 1000 + fieldcount);
+                        mFormViews.add(etInt);
+                        mLlRecordframe.addView(etInt);
+                        if (this.mEditMode) {
+                            if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
+                                etInt.setText(this.mValuesToEdit.get(fieldname).toString());
                             }
-                            tvBinFieldShow.setText(showText);
-                            btDownload.setTag((String) fieldname);
-                            btDownload.setEnabled(true);
-                            btClear.setEnabled(true);
                         }
-                    }
-                    LinearLayout llBinary = new LinearLayout(this);
-                    llBinary.setOrientation(LinearLayout.HORIZONTAL);
-                    llBinary.addView(tvBinFieldShow);
-                    llBinary.addView(btDownload);
-                    llBinary.addView(btUpload);
-                    llBinary.addView(btClear);
+                        break;
+                    case FLOAT:
+                        EditText etFloat = new EditText(this);
+                        etFloat.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                        etFloat.setTag(fieldname);
+                        etFloat.setId(DOUBLEVAL * 1000 + fieldcount);
+                        mFormViews.add(etFloat);
+                        mLlRecordframe.addView(etFloat);
+                        if (this.mEditMode) {
+                            if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
+                                etFloat.setText(this.mValuesToEdit.get(fieldname).toString());
+                            }
+                        }
+                        break;
+                    case CHAR:
+                    case TEXT:
+                        EditText etStrfield = new EditText(this);
+                        etStrfield.setTag(fieldname);
+                        etStrfield.setId(STRVAL * 1000 + fieldcount);
+                        mFormViews.add(etStrfield);
+                        mLlRecordframe.addView(etStrfield);
+                        if (this.mEditMode) {
+                            if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
+                                etStrfield.setText((String) this.mValuesToEdit.get(fieldname));
+                            }
+                        }
+                        break;
+                    case DATE:
+                        TextView tvDate = new TextView(this, null, android.R.attr.spinnerStyle);
+                        tvDate.setTag(fieldname);
+                        tvDate.setId(STRVAL * 1000 + fieldcount);
+                        tvDate.setOnClickListener(this);
+                        mFormViews.add(tvDate);
+                        mLlRecordframe.addView(tvDate);
+                        if (this.mEditMode) {
+                            if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
+                                tvDate.setText((String) this.mValuesToEdit.get(fieldname));
+                            }
+                        }
+                        break;
+                    case DATETIME:
+                        TextView tvDateTime = new TextView(this, null, android.R.attr.spinnerStyle);
+                        tvDateTime.setTag(fieldname);
+                        tvDateTime.setId(STRVAL * 1000 + fieldcount);
+                        tvDateTime.setOnClickListener(this);
+                        mFormViews.add(tvDateTime);
+                        mLlRecordframe.addView(tvDateTime);
+                        if (this.mEditMode) {
+                            if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
+                                tvDateTime.setText((String) this.mValuesToEdit.get(fieldname));
+                            }
+                        }
+                        break;
+                    case BINARY:
+                        Button btDownload = new Button(this);
+                        btDownload.setText(R.string.sDownload);
+                        btDownload.setId(DOWNLOAD_BUTTON_ID * 1000 + fieldcount);
+                        btDownload.setOnClickListener(this);
+                        Button btClear = new Button(this);
+                        btClear.setText(R.string.sClear);
+                        btClear.setId(CLEAR_BUTTON_ID * 1000 + fieldcount);
+                        btClear.setOnClickListener(this);
+                        Button btUpload = new Button(this);
+                        btUpload.setText(R.string.sUpload);
+                        btUpload.setId(UPLOAD_BUTTON_ID * 1000 + fieldcount);
+                        btUpload.setOnClickListener(this);
+                        TextView tvBinFieldShow = new TextView(this);
+                        tvBinFieldShow.setMinimumWidth(100);
+                        tvBinFieldShow.setMaxLines(2);
+                        btDownload.setEnabled(false);
+                        btClear.setEnabled(false);
 
-                    mLlRecordframe.addView(llBinary);
-                    break;
-                case SELECTION:
-                    break;
-                case ONE2ONE:
-                    break;
-                case MANY2ONE:
-                    LinkedList<IdString> manylist = new LinkedList<IdString>();
-                    Spinner spinner = new Spinner(this);
-                    spinner.setTag(fieldname);
-                    spinner.setId(INTVAL + fieldcount);
-                    //Blank many2list option
-                    IdString dummyIdStr = new IdString(-1, "");
-                    manylist.add(dummyIdStr);
-                    int pos = manylist.indexOf(dummyIdStr);
-                    spinner.setSelection(pos); //Set as default
-                    //--
-                    for (HashMap<String, Object> record : this.mReadExtraAsyncTask.getMany2DataLists().get(fieldname)) {
-                        manylist.add(new IdString((Integer) record.get("id"),
-                                (String) record.get("name")));
-                    }
-                    ArrayAdapter<IdString> spinnerArrayAdapter = new ArrayAdapter<IdString>(
-                            this, android.R.layout.simple_spinner_dropdown_item,
-                            manylist);
-                    spinner.setAdapter(spinnerArrayAdapter);
-                    mFormViews.add(spinner);
-                    mLlRecordframe.addView(spinner);
-                    if (this.mEditMode) {
-                        if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
-                            int edId = (Integer) ((Object[]) this.mValuesToEdit
-                                    .get(fieldname))[0];
-                            String edStr = ((Object[]) this.mValuesToEdit
-                                    .get(fieldname))[1].toString();
-                            IdString edIdStr = new IdString(edId, edStr);
-                            pos = manylist.indexOf(edIdStr);
-                            spinner.setSelection(pos);
+
+                        if (this.mEditMode) {
+                            Object binfield = this.mReadExtraAsyncTask.getListBinary().get(binfieldscount).get(fieldname);
+                            Object binname = this.mReadExtraAsyncTask.getListBinaryNames().get(binfieldscount++).get(fieldname + "_name");
+                            if (!(binfield instanceof Boolean)) {
+                                byte[] bytes = (((String) binfield).getBytes());
+                                this.mValuesToEdit.put(fieldname, bytes);
+                                String showText = readableFileSize(bytes.length);
+                                if (!(binname instanceof Boolean) && binname != null) {
+                                    binname = ((String) binname).replaceAll("[^a-zA-Z0-9-_\\.]", "_");
+                                    showText = (String) binname + "\n" + showText;
+                                    this.mValuesToEdit.put(fieldname + "_name", binname);
+                                }
+                                tvBinFieldShow.setText(showText);
+                                btDownload.setTag((String) fieldname);
+                                btDownload.setEnabled(true);
+                                btClear.setEnabled(true);
+                            }
                         }
-                    }
-                    break;
-                case ONE2MANY:
-                    break;
-                case MANY2MANY:
-                    break;
-                case RELATED:
-                    break;
-                // TODO Complete field types views
-                default:
-                    break;
-            }
+                        LinearLayout llBinary = new LinearLayout(this);
+                        llBinary.setOrientation(LinearLayout.HORIZONTAL);
+                        llBinary.addView(tvBinFieldShow);
+                        llBinary.addView(btDownload);
+                        llBinary.addView(btUpload);
+                        llBinary.addView(btClear);
+
+                        mLlRecordframe.addView(llBinary);
+                        break;
+                    case SELECTION:
+                        LinkedList<IdString> slist = new LinkedList<IdString>();
+                        Spinner selspinner = new Spinner(this);
+                        selspinner.setTag(fieldname);
+                        selspinner.setId(STRVAL*1000 + fieldcount);
+                        //Blank list option
+                        IdString sdummyIdStr = new IdString("", "");
+                        slist.add(sdummyIdStr);
+                        int spos = slist.indexOf(sdummyIdStr);
+                        selspinner.setSelection(spos); //Set as default
+                        //--
+                        Object[] selections = (Object[]) ((HashMap<String, Object>)this.mFieldsAttributes.get(fieldname)).get("selection");
+                        for(Object obj : selections){
+                            slist.add(new IdString((String)((Object[])obj)[0],(String)((Object[])obj)[1]));
+                        }
+                        ArrayAdapter<IdString> selspinnerArraydAdapter = new ArrayAdapter<IdString>(this, android.R.layout.simple_spinner_dropdown_item,slist);
+                        selspinner.setAdapter(selspinnerArraydAdapter);
+                        mFormViews.add(selspinner);
+                        mLlRecordframe.addView(selspinner);
+                        if(this.mEditMode){
+                            if(!(this.mValuesToEdit.get(fieldname) instanceof Boolean)){
+                                String edSid = (String) ((HashMap<String,Object>) this.mValuesToEdit).get(fieldname);
+                                String edStr = "";
+                                for (Object obj : selections){
+                                    if(edSid.equals((String)((Object[])obj)[0])){
+                                        edStr = (String)((Object[])obj)[1];
+                                    }
+                                }
+                                IdString  edIdStr = new IdString(edSid,edStr);
+                                spos = slist.indexOf(edIdStr);
+                                selspinner.setSelection(spos);
+                            }
+                        }
+                        break;
+
+                    case MANY2ONE:
+
+                        LinkedList<IdString> manylist = new LinkedList<IdString>();
+                        Spinner mspinner = new Spinner(this);
+                        mspinner.setTag(fieldname);
+                        mspinner.setId(INTVAL*1000 + fieldcount);
+                        //Blank many2list option
+                        IdString dummyIdStr = new IdString(-1, "");
+                        manylist.add(dummyIdStr);
+                        int pos = manylist.indexOf(dummyIdStr);
+                        mspinner.setSelection(pos); //Set as default
+                        //--
+                        for (HashMap<String, Object> record : this.mReadExtraAsyncTask.getMany2DataLists().get(fieldname)) {
+                            manylist.add(new IdString((Integer) record.get("id"),
+                                    (String) record.get("name")));
+                        }
+                        ArrayAdapter<IdString> spinnerArrayAdapter = new ArrayAdapter<IdString>(
+                                this, android.R.layout.simple_spinner_dropdown_item,
+                                manylist);
+                        mspinner.setAdapter(spinnerArrayAdapter);
+                        mFormViews.add(mspinner);
+                        mLlRecordframe.addView(mspinner);
+                        if (this.mEditMode) {
+                            if (!(this.mValuesToEdit.get(fieldname) instanceof Boolean)) {
+                                int edId = (Integer) ((Object[]) this.mValuesToEdit
+                                        .get(fieldname))[0];
+                                String edStr = ((Object[]) this.mValuesToEdit
+                                        .get(fieldname))[1].toString();
+                                IdString edIdStr = new IdString(edId, edStr);
+                                pos = manylist.indexOf(edIdStr);
+                                mspinner.setSelection(pos);
+                            }
+                        }
+                        break;
+                    case ONE2ONE:
+                        break;
+                    case ONE2MANY:
+                        break;
+                    case MANY2MANY:
+                        break;
+                    case RELATED:
+                        break;
+                    // TODO Complete field types views
+                    default:
+                        break;
+                }
         }
     }
 
@@ -384,7 +419,7 @@ public class FormActivity extends FragmentActivity implements
                         mValues.put(field, checked);
                         break;
                     case INTVAL:
-                        if (view instanceof Spinner) {
+                        if (view instanceof Spinner) { //Type many2one
                             Integer m2id = ((IdString) ((Spinner) view).getSelectedItem()).getId();
                             if (m2id == -1) {
                                 mValues.put(field, false);
@@ -401,17 +436,30 @@ public class FormActivity extends FragmentActivity implements
                         }
                         break;
                     case STRVAL:
-                        String strText = "";
-                        if (view instanceof EditText) {
-                            strText = ((EditText) view).getText().toString();
-                        } else {
-                            strText = ((TextView) view).getText().toString();
+                        if(view instanceof Spinner){ //Type selection
+                            //TODO Save data into mValues
+                            String sid = ((IdString) ((Spinner) view).getSelectedItem()).getSid();
+                            if (sid.equals("")){
+                                mValues.put(field,false);
+                            }
+                            else{
+                                mValues.put(field,sid);
+                            }
                         }
-                        if (strText.length() == 0) {
-                            mValues.put(field, false);
-                        } else {
-                            mValues.put(field, strText);
+                        else{
+                            String strText = "";
+                            if (view instanceof EditText) {
+                                strText = ((EditText) view).getText().toString();
+                            } else {
+                                strText = ((TextView) view).getText().toString();
+                            }
+                            if (strText.length() == 0) {
+                                mValues.put(field, false);
+                            } else {
+                                mValues.put(field, strText);
+                            }
                         }
+
                         break;
                     case DOUBLEVAL:
                         String doubleText = ((EditText) view).getText().toString();
@@ -422,8 +470,6 @@ public class FormActivity extends FragmentActivity implements
                         }
                         break;
                 }
-
-                // TODO Complete view instance data retrieval
             }
 
             if (goodInput) {
@@ -439,11 +485,18 @@ public class FormActivity extends FragmentActivity implements
             }
         }
 
-        if(v.getId() == UPLOAD_BUTTON_ID){
+        //Binary Field buttons ->
+
+        if(v.getId() / 1000 == CLEAR_BUTTON_ID){
 
 
         }
-        if (v.getId() == DOWNLOAD_BUTTON_ID) {
+
+        if(v.getId() / 1000 == UPLOAD_BUTTON_ID){
+
+
+        }
+        if (v.getId() / 1000 == DOWNLOAD_BUTTON_ID) {
             byte[] buffer = ((byte[]) this.mValuesToEdit.get(v.getTag()));
             if (this.mValues.containsKey(v.getTag())) {
                 buffer = ((byte[]) this.mValues.get(v.getTag()));

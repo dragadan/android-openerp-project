@@ -24,7 +24,7 @@ public class ReadExtraAsyncTask extends AsyncTask<String, String, OpenErpConnect
     private HashMap<String, List<HashMap<String, Object>>> mMany2DataLists;
     private List<HashMap<String, Object>> mListBinary;
     private List<HashMap<String, Object>> mListBinaryNames;
-    private List<HashMap<String, Object>> mListSelection;
+
 
     public ReadExtraAsyncTask(Activity act, HashMap<String, Object> record) {
         mRecord = record;
@@ -62,9 +62,6 @@ public class ReadExtraAsyncTask extends AsyncTask<String, String, OpenErpConnect
                     this.populateBinaryFields(ids, fieldname);
                     this.populateBinaryFieldNames(ids, fieldname);
                 }
-                if (type.equals("selection")) {
-                    this.populateSelectionFieldsLists(fieldname);
-                }
             }
         }
 
@@ -101,14 +98,10 @@ public class ReadExtraAsyncTask extends AsyncTask<String, String, OpenErpConnect
         mListBinary = this.oc.read(OpenErpHolder.getInstance().getmModelName(), ids, new String[]{fieldname});
     }
 
-    //Recives binary field name: must search for filename attribute in field description.
+    //Receives binary field name: must search for filename attribute in field description.
     //Expects that field name to be: "binaryfieldname_name"
     private void populateBinaryFieldNames(Long[] ids, String fieldname) {
         mListBinaryNames = this.oc.read(OpenErpHolder.getInstance().getmModelName(), ids, new String[]{fieldname + "_name"});
-    }
-
-    private void populateSelectionFieldsLists(String fieldname) {
-        //TODO retrieve possible selections.
     }
 
 
@@ -134,9 +127,6 @@ public class ReadExtraAsyncTask extends AsyncTask<String, String, OpenErpConnect
     }
 
 
-    public List<HashMap<String, Object>> getListSelection() {
-        return mListSelection;
-    }
 
     public List<HashMap<String, Object>> getListBinaryNames() {
         return mListBinaryNames;
