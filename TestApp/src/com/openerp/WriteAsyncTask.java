@@ -3,9 +3,9 @@ package com.openerp;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
-import com.example.testapp.R;
-
 import java.util.HashMap;
+
+import com.example.testapp.R;
 
 public class WriteAsyncTask extends
 		AsyncTask<HashMap<String, Object>, String, Boolean> {
@@ -58,7 +58,7 @@ public class WriteAsyncTask extends
 	@Override
 	protected void onPostExecute(Boolean result) {
 		if (result) {
-            activity.setResult(activity.RESULT_OK);
+            activity.setResult(Activity.RESULT_OK);
             activity.finish();
 		} else {
 

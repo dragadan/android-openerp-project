@@ -155,7 +155,7 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
         //Check for binary fields and take them out to avoid fetching all the uploaded files.
         for(String fname: this.mFieldNames){
             HashMap<String,Object> fieldAttrs = (HashMap<String,Object>)this.mFieldsDescrip.get(fname);
-            if ( ((HashMap<String,Object>)fieldAttrs).get("type").equals("binary") ){
+            if ( fieldAttrs.get("type").equals("binary") ){
                 this.hasBinaryField = true;
                 int i,j;
                 for (i=j=0; j<this.mFieldNames.length;++j){
@@ -232,7 +232,7 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
                     case DATE:
                     case DATETIME:
                         fieldRepView = new TextView(this);
-                        ((TextView)fieldRepView).setText((String) (obj).toString());
+                        ((TextView)fieldRepView).setText((obj).toString());
                         break;
                     case BINARY:
                         //No action taken on tree view, binary fields shouldn't be loaded here.
@@ -300,7 +300,8 @@ public class TreeActivity extends FragmentActivity implements FieldsGetActivityI
     }
 
     // Called when Tree shows again after the form is closed
-    protected void onActivityResult(int requestCode, int resultCode, Intent i) {
+    @Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent i) {
 
         if (requestCode == 1) {
             // Reload activity if form has been saved

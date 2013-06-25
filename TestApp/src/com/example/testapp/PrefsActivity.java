@@ -1,7 +1,9 @@
 package com.example.testapp;
 
 import android.os.Bundle;
+import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.widget.Button;
 
 public class PrefsActivity extends PreferenceActivity {
 	@Override
@@ -9,5 +11,4 @@ public class PrefsActivity extends PreferenceActivity {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.settings);
 	}
-
 }

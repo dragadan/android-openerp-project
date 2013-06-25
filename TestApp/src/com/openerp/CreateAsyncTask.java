@@ -4,9 +4,9 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.util.Log;
-import com.example.testapp.R;
-
 import java.util.HashMap;
+
+import com.example.testapp.R;
 
 public class CreateAsyncTask extends AsyncTask<HashMap<String, Object>, String, Long> {
 	private Activity activity;
@@ -50,7 +50,7 @@ public class CreateAsyncTask extends AsyncTask<HashMap<String, Object>, String, 
 	@Override
 	protected void onPostExecute(Long result) {
 		if(result != null){
-            activity.setResult(activity.RESULT_OK);
+            activity.setResult(Activity.RESULT_OK);
             activity.finish();
 		}
 		else{

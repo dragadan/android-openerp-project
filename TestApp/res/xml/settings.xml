@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+
+    <EditTextPreference
+            android:key="login"
+            android:title="@string/sSLogin"/>
+    <EditTextPreference
+            android:key="password"
+            android:inputType="textPassword"
+            android:title="@string/sPassword"/>
     <EditTextPreference
             android:key="serverHost"
             android:defaultValue="localhost"
@@ -16,5 +24,7 @@
             android:key="serverDBName"
             android:summary="@string/sServerDBNameSummary"
             android:title="@string/sServerDBName"/>
+
+
 
 </PreferenceScreen>

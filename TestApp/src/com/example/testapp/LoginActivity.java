@@ -14,7 +14,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 
 import com.openerp.ConnectAsyncTask;
 import com.openerp.OpenErpHolder;
@@ -23,23 +25,38 @@ import com.openerp.OpenErpHolder;
 public class LoginActivity extends Activity implements LoginActivityInterface {
 	private static final int RESULT_SETTINGS = 1;
 	public static final String PREFS_NAME = "MyPrefsFile";
-	public String serverHost;
-	public String serverPort;
-	public String serverDBName;
-	protected Button btnLogin;
-	protected EditText edtUser;
-	protected EditText edtPassword;
+    private String mLogin;
+    private String mPassword;
+	private String mServerHost;
+	private String mServerPort;
+	private String mServerDBName;
+    private boolean mFirstRun;
+    private RelativeLayout mRlContainer;
+    private Button mLoginButton;
 
-	@Override
+    @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_login);
         this.setActivities();
-		this.findViews();
 		this.loadPreferences();
+        this.setLoginBtn();
 	}
 
-	@Override
+    private void setLoginBtn() {
+        this.mRlContainer = new RelativeLayout(this);
+        this.mLoginButton = new Button(this);
+        this.mLoginButton.setText(getString(R.string.sSLogin));
+        mLoginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                doLogin();
+            }
+        });
+        this.mRlContainer.addView(this.mLoginButton);
+        setContentView(this.mRlContainer);
+    }
+
+    @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.menu, menu);
@@ -47,47 +64,34 @@ public class LoginActivity extends Activity implements LoginActivityInterface {
 	}
 
     public void setServerPort(String serverPort) {
-        this.serverPort = serverPort;
+        this.mServerPort = serverPort;
     }
 
     public void setServerHost(String serverHost) {
-        this.serverHost = serverHost;
+        this.mServerHost = serverHost;
     }
 
     public void setServerDBName(String serverDBName) {
-        this.serverDBName = serverDBName;
+        this.mServerDBName = serverDBName;
     }
 
     @Override
 	public boolean onOptionsItemSelected(MenuItem item) { 
 		// Handle item selection (only 1 option so we don't check item)
 		viewSettings();
-
 		return true;
 	}
 
     public String getServerHost() {
-        return serverHost;
+        return mServerHost;
     }
 
     public String getServerPort() {
-        return serverPort;
+        return mServerPort;
     }
 
     public String getServerDBName() {
-        return serverDBName;
-    }
-
-    public Button getBtnLogin() {
-        return btnLogin;
-    }
-
-    public EditText getEdtUser() {
-        return edtUser;
-    }
-
-    public EditText getEdtPassword() {
-        return edtPassword;
+        return mServerDBName;
     }
 
     private void viewSettings() {
@@ -99,47 +103,57 @@ public class LoginActivity extends Activity implements LoginActivityInterface {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		savePreferences();
+
 	}
 
 	private void savePreferences() {
 		// Save Preferences to local variables
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
-		this.serverHost = settings.getString("serverHost", "localhost");
-		this.serverPort = settings.getString("serverPort", "8069");
-		this.serverDBName = settings.getString("serverDBName", "");
+        this.mFirstRun = false;
+        this.mLogin = settings.getString("login","");
+        this.mPassword = settings.getString("password","");
+		this.mServerHost = settings.getString("serverHost", "localhost");
+		this.mServerPort = settings.getString("serverPort", "8069");
+		this.mServerDBName = settings.getString("serverDBName", "");
 
 		// Save Preferences to file
 		settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 		SharedPreferences.Editor editor = settings.edit();
-		editor.putString("serverHost", this.serverHost);
-		editor.putString("serverPort", this.serverPort);
-		editor.putString("serverDBName", this.serverDBName);
+        editor.putBoolean("firstRun",this.mFirstRun);
+        editor.putString("login",this.mLogin);
+        editor.putString("password",this.mPassword);
+		editor.putString("serverHost", this.mServerHost);
+		editor.putString("serverPort", this.mServerPort);
+		editor.putString("serverDBName", this.mServerDBName);
 
 		// Commit the edits!
 		editor.commit();
+
 	}
 
 	private void loadPreferences() {
 		// Load preferences from files
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-		this.serverHost = settings.getString("serverHost", "localhost");
-		this.serverPort = settings.getString("serverPort", "8069");
-		this.serverDBName = settings.getString("serverDBName", "");
+        this.mFirstRun = settings.getBoolean("firstRun",true);
+        //this.mFirstRun = true; //REMOVE
+        if (this.mFirstRun)
+            viewSettings();
+        else{
+            this.mLogin = settings.getString("login","");
+            this.mPassword = settings.getString("password","");
+		    this.mServerHost = settings.getString("serverHost", "localhost");
+		    this.mServerPort = settings.getString("serverPort", "8069");
+		    this.mServerDBName = settings.getString("serverDBName", "");
+        }
 	}
 
-	private void findViews() {
-		// Binds xml views to local variables
-		btnLogin = (Button) findViewById(R.id.btnConnect_id);
-		edtUser = (EditText) findViewById(R.id.edtUser);
-		edtPassword = (EditText) findViewById(R.id.edtPassword);
-	}
+
 	
 
-	public void doLogin(View view) {
+	public void doLogin() {
 		ConnectAsyncTask conAsT = new ConnectAsyncTask(this);
-		conAsT.execute(serverHost, serverPort.toString(), serverDBName, edtUser.getText()
-				.toString(), edtPassword.getText().toString());
+		conAsT.execute(mServerHost, mServerPort.toString(), mServerDBName, mLogin, mPassword);
 		Log.d("Connecting...", "...");
 	}
 
@@ -191,6 +205,7 @@ public class LoginActivity extends Activity implements LoginActivityInterface {
                                 public void onClick(DialogInterface dialog,
                                                     int id) {
                                     dialog.cancel();
+                                    viewSettings();
                                 }
                             });
             AlertDialog alert = builder.create();

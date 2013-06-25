@@ -3,7 +3,7 @@
 
     <string name="app_name">TestApp</string>
     <string name="action_settings">Settings</string>
-    <string name="sBconnect">Login</string>
+    <string name="sSLogin">Login</string>
     <string name="sUsername">Username</string>
     <string name="sPassword">Password</string>
     <string name="sSettingsTitle">Settings</string>
@@ -32,6 +32,6 @@
     <string name="sCompletedDownload">Download complete</string>
     <string name="sClear">Clear</string>
     <string name="sUpload">Upload</string>
-    <string name="sFormTitle">Form</string>
+    <string name="sFormTitle">Form</string><string name="sCancel">Cancel</string>
 
 </resources>

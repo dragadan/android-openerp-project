@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ActivityNotFoundException;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NotificationCompat;
 import android.app.PendingIntent;
 import android.content.DialogInterface;
@@ -12,7 +13,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.NotificationCompat;
 import android.text.InputType;
 import android.util.Log;
 import android.view.View;
@@ -53,6 +53,7 @@ public class FormActivity extends FragmentActivity implements
         ReadActivityInterface, OnClickListener, DialogInterface.OnClickListener {
     private final static int SPACING_VERTICAL = 25;
     private final static int SPACING_HORIZONTAL = 10;
+    private final static int M2VAL = 1; //For M2M fields
     private final static int INTVAL = 2; //For integer Fields
     private final static int STRVAL = 3; //For Char and Text Fields
     private final static int DOUBLEVAL = 4; //For Float fields
@@ -61,7 +62,8 @@ public class FormActivity extends FragmentActivity implements
     private final static int UPLOAD_BUTTON_ID = 7;
     private final static int CLEAR_BUTTON_ID = 8;
     private final static int BINARY_FIELD_ID = 9;
-    private static final int REQUEST_CODE = 0;
+    private final static int MULT_CONSTANT = 1000;
+
 
     private ArrayList<View> mFormViews;
     private ScrollView mSvRecords;
@@ -77,7 +79,7 @@ public class FormActivity extends FragmentActivity implements
     private ReadExtraAsyncTask mReadExtraAsyncTask;
     private WriteAsyncTask mWriteTask;
     private HashMap<String, Object> mFieldsAttributes; //Fields OpenERP Attributes
-    private ReadAsyncTask mReadAsyncTask;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +97,7 @@ public class FormActivity extends FragmentActivity implements
         this.mValues = new HashMap<String, Object>();
         if (extras != null) {
             if (extras.containsKey("editRecordId")) {
-                this.mValuesToEdit = (HashMap<String, Object>) OpenErpHolder.getInstance().getmData().get(((Integer) extras.get("editRecordId")));
+                this.mValuesToEdit =  OpenErpHolder.getInstance().getmData().get(((Integer) extras.get("editRecordId")));
                 this.mEditMode = true;
             } else {
                 this.mEditMode = false;
@@ -103,7 +105,7 @@ public class FormActivity extends FragmentActivity implements
 
         }
         this.mReadExtraAsyncTask = new ReadExtraAsyncTask(this, this.mValuesToEdit);
-        this.mReadExtraAsyncTask.execute(null);
+        this.mReadExtraAsyncTask.execute("");
     }
 
     private void initializeLayout() {
@@ -149,7 +151,7 @@ public class FormActivity extends FragmentActivity implements
     /**
      * Get OpenERP Field Type in string
      *
-     * @param fieldname
+     * @param fieldname Field name string
      * @return field type
      */
     private String getFieldType(String fieldname) {
@@ -189,7 +191,7 @@ public class FormActivity extends FragmentActivity implements
                         cb.setTag(fieldname);
                         mFormViews.add(cb);
                         mLlRecordframe.addView(cb);
-                        cb.setId(BOOLVAL * 1000 + fieldcount);
+                        cb.setId(BOOLVAL * MULT_CONSTANT + fieldcount);
                         if (this.mEditMode) {
                             Boolean checked = (Boolean) this.mValuesToEdit.get(fieldname);
                             cb.setChecked(checked);
@@ -200,7 +202,7 @@ public class FormActivity extends FragmentActivity implements
                         EditText etInt = new EditText(this);
                         etInt.setInputType(InputType.TYPE_CLASS_NUMBER);
                         etInt.setTag(fieldname);
-                        etInt.setId(INTVAL * 1000 + fieldcount);
+                        etInt.setId(INTVAL * MULT_CONSTANT + fieldcount);
                         mFormViews.add(etInt);
                         mLlRecordframe.addView(etInt);
                         if (this.mEditMode) {
@@ -213,7 +215,7 @@ public class FormActivity extends FragmentActivity implements
                         EditText etFloat = new EditText(this);
                         etFloat.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
                         etFloat.setTag(fieldname);
-                        etFloat.setId(DOUBLEVAL * 1000 + fieldcount);
+                        etFloat.setId(DOUBLEVAL * MULT_CONSTANT + fieldcount);
                         mFormViews.add(etFloat);
                         mLlRecordframe.addView(etFloat);
                         if (this.mEditMode) {
@@ -226,7 +228,7 @@ public class FormActivity extends FragmentActivity implements
                     case TEXT:
                         EditText etStrfield = new EditText(this);
                         etStrfield.setTag(fieldname);
-                        etStrfield.setId(STRVAL * 1000 + fieldcount);
+                        etStrfield.setId(STRVAL * MULT_CONSTANT + fieldcount);
                         mFormViews.add(etStrfield);
                         mLlRecordframe.addView(etStrfield);
                         if (this.mEditMode) {
@@ -238,7 +240,7 @@ public class FormActivity extends FragmentActivity implements
                     case DATE:
                         TextView tvDate = new TextView(this, null, android.R.attr.spinnerStyle);
                         tvDate.setTag(fieldname);
-                        tvDate.setId(STRVAL * 1000 + fieldcount);
+                        tvDate.setId(STRVAL * MULT_CONSTANT + fieldcount);
                         tvDate.setOnClickListener(this);
                         mFormViews.add(tvDate);
                         mLlRecordframe.addView(tvDate);
@@ -251,7 +253,7 @@ public class FormActivity extends FragmentActivity implements
                     case DATETIME:
                         TextView tvDateTime = new TextView(this, null, android.R.attr.spinnerStyle);
                         tvDateTime.setTag(fieldname);
-                        tvDateTime.setId(STRVAL * 1000 + fieldcount);
+                        tvDateTime.setId(STRVAL * MULT_CONSTANT + fieldcount);
                         tvDateTime.setOnClickListener(this);
                         mFormViews.add(tvDateTime);
                         mLlRecordframe.addView(tvDateTime);
@@ -264,23 +266,22 @@ public class FormActivity extends FragmentActivity implements
                     case BINARY:
                         Button btDownload = new Button(this);
                         btDownload.setText(R.string.sDownload);
-                        btDownload.setId(DOWNLOAD_BUTTON_ID * 1000 + fieldcount);
+                        btDownload.setId(DOWNLOAD_BUTTON_ID * MULT_CONSTANT + fieldcount);
                         btDownload.setOnClickListener(this);
                         Button btClear = new Button(this);
                         btClear.setText(R.string.sClear);
-                        btClear.setId(CLEAR_BUTTON_ID * 1000 + fieldcount);
+                        btClear.setId(CLEAR_BUTTON_ID * MULT_CONSTANT + fieldcount);
                         btClear.setOnClickListener(this);
                         Button btUpload = new Button(this);
                         btUpload.setText(R.string.sUpload);
-                        btUpload.setId(UPLOAD_BUTTON_ID * 1000 + fieldcount);
+                        btUpload.setId(UPLOAD_BUTTON_ID * MULT_CONSTANT + fieldcount);
                         btUpload.setOnClickListener(this);
                         TextView tvBinFieldShow = new TextView(this);
+                        tvBinFieldShow.setId(BINARY_FIELD_ID*MULT_CONSTANT+fieldcount);
                         tvBinFieldShow.setMinimumWidth(100);
                         tvBinFieldShow.setMaxLines(2);
                         btDownload.setEnabled(false);
                         btClear.setEnabled(false);
-
-
                         if (this.mEditMode) {
                             Object binfield = this.mReadExtraAsyncTask.getListBinary().get(binfieldscount).get(fieldname);
                             Object binname = this.mReadExtraAsyncTask.getListBinaryNames().get(binfieldscount++).get(fieldname + "_name");
@@ -290,11 +291,11 @@ public class FormActivity extends FragmentActivity implements
                                 String showText = readableFileSize(bytes.length);
                                 if (!(binname instanceof Boolean) && binname != null) {
                                     binname = ((String) binname).replaceAll("[^a-zA-Z0-9-_\\.]", "_");
-                                    showText = (String) binname + "\n" + showText;
+                                    showText = binname + "\n" + showText;
                                     this.mValuesToEdit.put(fieldname + "_name", binname);
                                 }
                                 tvBinFieldShow.setText(showText);
-                                btDownload.setTag((String) fieldname);
+                                btDownload.setTag(fieldname);
                                 btDownload.setEnabled(true);
                                 btClear.setEnabled(true);
                             }
@@ -312,7 +313,7 @@ public class FormActivity extends FragmentActivity implements
                         LinkedList<IdString> slist = new LinkedList<IdString>();
                         Spinner selspinner = new Spinner(this);
                         selspinner.setTag(fieldname);
-                        selspinner.setId(STRVAL*1000 + fieldcount);
+                        selspinner.setId(STRVAL*MULT_CONSTANT + fieldcount);
                         //Blank list option
                         IdString sdummyIdStr = new IdString("", "");
                         slist.add(sdummyIdStr);
@@ -329,10 +330,10 @@ public class FormActivity extends FragmentActivity implements
                         mLlRecordframe.addView(selspinner);
                         if(this.mEditMode){
                             if(!(this.mValuesToEdit.get(fieldname) instanceof Boolean)){
-                                String edSid = (String) ((HashMap<String,Object>) this.mValuesToEdit).get(fieldname);
+                                String edSid = (String) this.mValuesToEdit.get(fieldname);
                                 String edStr = "";
                                 for (Object obj : selections){
-                                    if(edSid.equals((String)((Object[])obj)[0])){
+                                    if(edSid.equals(((Object[]) obj)[0])){
                                         edStr = (String)((Object[])obj)[1];
                                     }
                                 }
@@ -348,7 +349,7 @@ public class FormActivity extends FragmentActivity implements
                         LinkedList<IdString> manylist = new LinkedList<IdString>();
                         Spinner mspinner = new Spinner(this);
                         mspinner.setTag(fieldname);
-                        mspinner.setId(INTVAL*1000 + fieldcount);
+                        mspinner.setId(INTVAL*MULT_CONSTANT + fieldcount);
                         //Blank many2list option
                         IdString dummyIdStr = new IdString(-1, "");
                         manylist.add(dummyIdStr);
@@ -382,6 +383,12 @@ public class FormActivity extends FragmentActivity implements
                     case ONE2MANY:
                         break;
                     case MANY2MANY:
+                        TextView tvM2m = new TextView(this, null, android.R.attr.spinnerStyle);
+                        tvM2m.setId(M2VAL * MULT_CONSTANT + fieldcount);
+                        tvM2m.setOnClickListener(this);
+                        mFormViews.add(tvM2m);
+                        mLlRecordframe.addView(tvM2m);
+
                         break;
                     case RELATED:
                         break;
@@ -392,8 +399,7 @@ public class FormActivity extends FragmentActivity implements
         }
     }
 
-
-    public String readableFileSize(long size) {
+    private String readableFileSize(long size) {
         if (size <= 0) return "0";
         final String[] units = new String[]{"B", "KB", "MB", "GB", "TB"};
         int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
@@ -413,7 +419,7 @@ public class FormActivity extends FragmentActivity implements
         if (v.getId() == this.mBSave.getId()) {
             for (View view : mFormViews) {
                 String field = (String) view.getTag();
-                switch (view.getId() / 1000) {
+                switch (view.getId() / MULT_CONSTANT) {
                     case BOOLVAL:
                         Boolean checked = ((CheckBox) view).isChecked();
                         mValues.put(field, checked);
@@ -447,7 +453,7 @@ public class FormActivity extends FragmentActivity implements
                             }
                         }
                         else{
-                            String strText = "";
+                            String strText="";
                             if (view instanceof EditText) {
                                 strText = ((EditText) view).getText().toString();
                             } else {
@@ -487,16 +493,22 @@ public class FormActivity extends FragmentActivity implements
 
         //Binary Field buttons ->
 
-        if(v.getId() / 1000 == CLEAR_BUTTON_ID){
-
-
+        if(v.getId() / MULT_CONSTANT == CLEAR_BUTTON_ID){
+            TextView binTv = (TextView) findViewById(v.getId()+MULT_CONSTANT);
+            binTv.setText("");
+            Button binBt = (Button) findViewById(v.getId()-(2*MULT_CONSTANT));
+            binBt.setEnabled(false);
+            Button clrBt = (Button) findViewById(v.getId());
+            clrBt.setEnabled(false);
+            mValues.put((String)binBt.getTag(),false);
         }
 
-        if(v.getId() / 1000 == UPLOAD_BUTTON_ID){
+        if(v.getId() / MULT_CONSTANT == UPLOAD_BUTTON_ID){
 
-
+            Button binBt = (Button) findViewById(v.getId()-(2*MULT_CONSTANT));
+            binBt.setEnabled(true);
         }
-        if (v.getId() / 1000 == DOWNLOAD_BUTTON_ID) {
+        if (v.getId() / MULT_CONSTANT == DOWNLOAD_BUTTON_ID) {
             byte[] buffer = ((byte[]) this.mValuesToEdit.get(v.getTag()));
             if (this.mValues.containsKey(v.getTag())) {
                 buffer = ((byte[]) this.mValues.get(v.getTag()));
@@ -530,7 +542,7 @@ public class FormActivity extends FragmentActivity implements
         }
 
         // If TextView for DATE or DATETIME is clicked
-        if (v.getId() / 1000 == STRVAL) {
+        if (v.getId() / MULT_CONSTANT == STRVAL) {
             DateTimePickerDialog newFragment;
             if (getFieldType((String) v.getTag()).equals("DATETIME")) {
                 newFragment = new DateTimePickerDialog(v, true);
@@ -543,10 +555,13 @@ public class FormActivity extends FragmentActivity implements
             }
         }
 
+        //If Many2Many field is clicked
+        if (v.getId()/MULT_CONSTANT == M2VAL){
+            M2Dialog m2diag = new M2Dialog(this.mReadExtraAsyncTask);
+            m2diag.show(getSupportFragmentManager(),"M2MChoose");
+        }
 
     }
-
-
 
     private void showNotification(File file) {
 
@@ -585,7 +600,7 @@ public class FormActivity extends FragmentActivity implements
     private void goBackDiscard() {
 
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-        alertDialog.setPositiveButton(R.string.sYes, (DialogInterface.OnClickListener) this);
+        alertDialog.setPositiveButton(R.string.sYes, this);
         alertDialog.setNegativeButton(getString(R.string.sNo), null);
         alertDialog.setMessage(getString(R.string.sDiscard));
         alertDialog.setTitle("TestApp");
